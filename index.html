@@ -226,6 +226,23 @@
   .privacy-line { text-align: center; color: var(--muted); font-size: 12px; margin: 22px 0 4px; }
   .privacy-line a { color: var(--accent); }
 
+  /* ---------- inventory ---------- */
+  .chk { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--ink); text-transform: none; letter-spacing: 0; font-weight: 600; margin: 0; border: 1px solid var(--line-strong); border-radius: 11px; padding: 0 10px; background: var(--panel); cursor: pointer; }
+  .chk input { width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+  .inv-group { margin-bottom: 20px; }
+  .inv-cat { font-family: Georgia, serif; font-size: 16px; font-weight: 600; margin: 0 2px 9px; display: flex; align-items: center; gap: 7px; }
+  .inv-cat .c { color: var(--muted); font-weight: 400; font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .inv-items { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  @media (min-width: 620px) { .inv-items { grid-template-columns: 1fr 1fr; } }
+  .inv-item { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 11px 42px 11px 13px; box-shadow: var(--shadow); }
+  .inv-name { font-weight: 600; font-size: 15px; }
+  .badge-untried { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; color: var(--margin-red); border: 1px solid var(--margin-red); border-radius: 999px; padding: 1px 8px; vertical-align: middle; }
+  .inv-notes { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .inv-item .del { position: absolute; top: 8px; right: 8px; background: transparent; border: 1px solid var(--line); border-radius: 8px; width: 30px; height: 30px; color: var(--muted); cursor: pointer; font-size: 13px; }
+  .inv-item .del:active { color: var(--bad); border-color: var(--bad); }
+  .seg-cat { display: flex; width: 100%; }
+  .seg-cat button { flex: 1; padding: 10px 4px; }
+
   /* ---------- FAB ---------- */
   .fab {
     position: fixed; right: 18px; z-index: 25;
@@ -340,6 +357,11 @@
       <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
       <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
     </symbol>
+    <symbol id="i-box" viewBox="0 0 24 24">
+      <path d="M3 7 L12 3 L21 7 L12 11 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M3 7 V17 L12 21 L21 17 V7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <line x1="12" y1="11" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -406,6 +428,32 @@
     </div>
   </section>
 
+  <!-- ===== INVENTORY VIEW ===== -->
+  <section class="view" id="viewInv" hidden>
+    <div class="view-head"><div class="view-title serif"><svg class="drop"><use href="#i-drop"/></svg> Inventory <span class="count" id="invCount" style="font-size:13px;color:var(--muted);font-weight:400"></span></div></div>
+    <p class="view-sub">Everything you own. Your items power the autofill suggestions, and anything you have not paired yet is tagged untried.</p>
+    <div class="toolbar">
+      <input type="search" id="invSearch" placeholder="Search your inventory…" />
+      <div class="row">
+        <select id="invFilterCat" aria-label="Filter by category">
+          <option value="">All categories</option>
+          <option value="pen">Pens</option>
+          <option value="ink">Inks</option>
+          <option value="notebook">Notebooks</option>
+          <option value="paper">Papers</option>
+        </select>
+        <label class="chk"><input type="checkbox" id="invUntried" /> Untried only</label>
+      </div>
+    </div>
+    <div id="invList"></div>
+    <div class="empty" id="invEmpty" hidden>
+      <svg class="motif" viewBox="0 0 120 110" aria-hidden="true"><use href="#i-box" x="30" y="18" width="60" height="60" style="color:var(--line-strong)"/></svg>
+      <h3 class="serif">Your shelf is empty</h3>
+      <p>Add the pens, inks, notebooks and papers you own. Tap the + button to start.</p>
+      <button class="btn" id="invEmptyAdd">Add an item</button>
+    </div>
+  </section>
+
   <!-- ===== RECOMMENDER VIEW ===== -->
   <section class="view" id="viewRec" hidden>
     <div class="view-head"><div class="view-title serif"><svg class="drop"><use href="#i-drop"/></svg> Pairing recommender</div></div>
@@ -451,23 +499,24 @@
     <details class="faq"><summary>What is Trinity?</summary><div class="faq-body">A log for your fountain-pen combinations. Its heart is the trinity of <strong>pen, ink and paper</strong>. Record each combination, rate the experience and add notes, and over time it becomes your personal reference for what writes well together.</div></details>
     <details class="faq"><summary>Why pen, ink and paper, and not the nib?</summary><div class="faq-body">The nib matters a great deal, but it usually lives and dies with its pen and is rarely swapped. So the three pillars stay pen, ink and paper, and the nib rides along as a detail of the pen.</div></details>
     <details class="faq"><summary>Is my data private?</summary><div class="faq-body">Yes. Everything is saved only in this browser on this device. Nothing is uploaded, and there is no account or server.</div></details>
-    <details class="faq"><summary>How do I back up or move my data?</summary><div class="faq-body">Open the <strong>⋯</strong> menu on the log. <strong>Backup</strong> saves a file with all your entries and photos. <strong>Import</strong> loads it back on another device. <strong>Export CSV</strong> gives a spreadsheet copy of the text.</div></details>
+    <details class="faq"><summary>How do I back up or move my data?</summary><div class="faq-body">Open the <strong>⋯</strong> menu on the log. <strong>Backup</strong> saves a file with all your entries, photos and inventory. <strong>Import</strong> loads it back on another device. <strong>Export CSV</strong> gives a spreadsheet copy of the log.</div></details>
     <details class="faq"><summary>Can I install it like an app?</summary><div class="faq-body">Yes. Trinity is a PWA. Use your browser's <strong>Install app</strong> or <strong>Add to Home Screen</strong> option. It then opens in its own window and works offline.</div></details>
     <details class="faq"><summary>My pen or ink is from a small maker. Will it work?</summary><div class="faq-body">Just type the full name. The suggestions only save keystrokes for common brands. Anything you type is accepted and remembered for next time.</div></details>
     <details class="faq"><summary>How do I add a photo?</summary><div class="faq-body">In the add sheet, tap <strong>Add photo</strong>. On a phone this can open the camera. The image is shrunk on your device before it is saved, so it stays small.</div></details>
+    <details class="faq"><summary>What is the Inventory tab?</summary><div class="faq-body">A list of the pens, inks, notebooks and papers you own. Your items feed the autofill suggestions across the app, and anything you have not paired in the log yet is tagged <strong>untried</strong>, so it doubles as a to-try list.</div></details>
 
     <div class="geek-head"><svg class="nibmark"><use href="#i-nib"/></svg> For the geeks</div>
 
     <details class="faq"><summary>How does the pairing recommender work?</summary><div class="faq-body">
-      It turns your own ratings into a ranking. Given a pen and an ink:
+      You decide which corners you have and which you want Trinity to find. Then:
       <ol>
-        <li>It filters your log to matching entries. Either field can be left blank, which acts as a wildcard.</li>
-        <li>It groups the matches by paper.</li>
-        <li>Each experience becomes a number: <code>Poor 1</code>, <code>Fair 2</code>, <code>Good 3</code>, <code>Great 4</code>, <code>Excellent 5</code>, and it averages them per paper.</li>
-        <li>It ranks papers by that average, highest first. Ties go to the paper with more entries, since that is stronger evidence.</li>
+        <li>It keeps only the log entries that match every corner you marked <strong>I have it</strong> and filled in.</li>
+        <li>It groups those entries by whatever you marked <strong>Find it</strong>, whether that is one corner (a single paper, ink or pen) or two (a pairing).</li>
+        <li>Each experience becomes a number: <code>Poor 1</code>, <code>Fair 2</code>, <code>Good 3</code>, <code>Great 4</code>, <code>Excellent 5</code>, and it averages them per group.</li>
+        <li>It ranks the groups by that average, highest first. Ties go to the group with more entries, since that is stronger evidence.</li>
         <li>The pill is the average rounded to the nearest word, and the line shows the exact average and the entry count.</li>
       </ol>
-      Nibs are pooled, since they belong to the pen. The more you log, the sharper it gets.
+      Mark nothing as had and all three as found to see your best combinations overall. Nibs are pooled, since they belong to the pen. The more you log, the sharper it gets.
     </div></details>
     <details class="faq"><summary>Where is my data stored?</summary><div class="faq-body">Entries live in <code>localStorage</code> under <code>trinity.entries.v1</code> as a JSON array, with photos held as small compressed data inside each entry. Profile and theme are stored the same way. Backup exports that JSON, and Import replaces the current entries with it.</div></details>
     <details class="faq"><summary>How do offline and install work?</summary><div class="faq-body">A service worker caches the app on first load, so Trinity opens with no connection. A new version is fetched in the background and applies on your next visit.</div></details>
@@ -486,7 +535,8 @@
 <!-- bottom nav -->
 <nav class="bottomnav">
   <button data-view="log" class="active"><svg><use href="#i-log"/></svg>Log</button>
-  <button data-view="rec"><svg><use href="#i-tri"/></svg>Recommender</button>
+  <button data-view="inv"><svg><use href="#i-box"/></svg>Inventory</button>
+  <button data-view="rec"><svg><use href="#i-tri"/></svg>Pairings</button>
   <button data-view="faq"><svg><use href="#i-faq"/></svg>FAQ</button>
 </nav>
 
@@ -530,6 +580,33 @@
         </div>
         <div class="full"><label for="comments">Notes</label><textarea id="comments" placeholder="Feathering? Dry time? Sheen? How it felt…"></textarea></div>
         <button class="btn block full" type="submit">Add to log</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Inventory add sheet ===== -->
+<div class="backdrop sheet-wrap" id="invSheet" hidden>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="sheet-head">
+      <h2 class="serif"><svg class="nibmark" style="width:16px;height:16px"><use href="#i-box"/></svg> Add to inventory</h2>
+      <button class="x-btn" id="invClose" title="Close">×</button>
+    </div>
+    <form id="invForm" autocomplete="off">
+      <div class="form-grid">
+        <div class="full">
+          <label>Category</label>
+          <div class="seg seg-cat" id="invCatSeg">
+            <button type="button" data-cat="pen" class="active">Pen</button>
+            <button type="button" data-cat="ink">Ink</button>
+            <button type="button" data-cat="notebook">Notebook</button>
+            <button type="button" data-cat="paper">Paper</button>
+          </div>
+        </div>
+        <div class="full"><label for="invName">Name</label><input type="text" id="invName" list="penList" placeholder="e.g. Lamy 2000" required /></div>
+        <div class="full"><label for="invNotes">Notes <span class="hint">(optional)</span></label><textarea id="invNotes" placeholder="Colour, nib, where you got it…"></textarea></div>
+        <button class="btn block full" type="submit">Add to inventory</button>
       </div>
     </form>
   </div>
@@ -642,10 +719,25 @@
     "Copy paper 70gsm","Copy paper 75gsm","Copy paper 80gsm","Printer paper","Double A 80gsm","Bristol Board","Handmade cotton paper"
   ];
 
+  var INV_KEY = "trinity.inventory.v1";
+  var CAT_LABEL = { pen: "Pens", ink: "Inks", notebook: "Notebooks", paper: "Papers" };
+
   var entries = load();
+  var inventory = loadInv();
   var pendingPhoto = null; // dataURL for the add form
+  var invCat = "pen";      // current add-sheet category
+  var currentViewName = "log";
 
   var $ = function (id) { return document.getElementById(id); };
+
+  function loadInv() {
+    try {
+      var raw = localStorage.getItem(INV_KEY); if (!raw) return [];
+      var d = JSON.parse(raw); if (!Array.isArray(d)) return [];
+      return d.map(function (it) { return { id: it.id || uid(), category: it.category || "pen", name: it.name || "", notes: it.notes || "", created: it.created || Date.now() }; });
+    } catch (e) { return []; }
+  }
+  function saveInv() { localStorage.setItem(INV_KEY, JSON.stringify(inventory)); }
 
   /* ---------- storage ---------- */
   function load() {
@@ -682,12 +774,14 @@
 
   /* ---------- views ---------- */
   function showView(name) {
-    var map = { log: "viewLog", rec: "viewRec", faq: "viewFaq" };
+    var map = { log: "viewLog", inv: "viewInv", rec: "viewRec", faq: "viewFaq" };
+    if (!map[name]) name = "log";
+    currentViewName = name;
     Object.keys(map).forEach(function (k) { $(map[k]).hidden = (k !== name); });
     document.querySelectorAll(".bottomnav button").forEach(function (b) {
       b.classList.toggle("active", b.getAttribute("data-view") === name);
     });
-    $("fab").hidden = (name !== "log");
+    $("fab").hidden = !(name === "log" || name === "inv");
     try { localStorage.setItem(VIEW_KEY, name); } catch (e) {}
     window.scrollTo(0, 0);
   }
@@ -740,10 +834,11 @@
   function readNib() { var sel = $("nib"); return sel.value === "__other" ? $("nibOther").value.trim() : sel.value; }
 
   /* ---------- datalists + nib filter ---------- */
+  function invNames(cat) { return inventory.filter(function (it) { return it.category === cat; }).map(function (it) { return it.name; }); }
   function refreshDatalists() {
-    fillDatalist("penList", "pen", PRELOAD_PENS);
-    fillDatalist("inkList", "ink", PRELOAD_INKS);
-    fillDatalist("paperList", "paper", PRELOAD_PAPERS);
+    fillDatalist("penList", "pen", invNames("pen").concat(PRELOAD_PENS));
+    fillDatalist("inkList", "ink", invNames("ink").concat(PRELOAD_INKS));
+    fillDatalist("paperList", "paper", invNames("notebook").concat(invNames("paper"), PRELOAD_PAPERS));
   }
   function fillDatalist(id, key, preload) {
     var seen = {}, opts = [];
@@ -876,6 +971,93 @@
     box.innerHTML = html;
   }
 
+  /* ---------- inventory ---------- */
+  function usedSets() {
+    var pen = {}, ink = {}, paper = {};
+    entries.forEach(function (e) {
+      if (e.pen) pen[e.pen.toLowerCase()] = 1;
+      if (e.ink) ink[e.ink.toLowerCase()] = 1;
+      if (e.paper) paper[e.paper.toLowerCase()] = 1;
+    });
+    return { pen: pen, ink: ink, paper: paper };
+  }
+  function isUntried(item, used) {
+    var n = (item.name || "").toLowerCase();
+    if (item.category === "pen") return !used.pen[n];
+    if (item.category === "ink") return !used.ink[n];
+    return !used.paper[n]; // notebooks and papers both map to the log's paper field
+  }
+  function renderInv() {
+    var q = $("invSearch").value.trim().toLowerCase();
+    var fc = $("invFilterCat").value;
+    var untriedOnly = $("invUntried").checked;
+    var used = usedSets();
+    var items = inventory.filter(function (it) {
+      if (fc && it.category !== fc) return false;
+      if (untriedOnly && !isUntried(it, used)) return false;
+      if (q) { var hay = (it.name + " " + (it.notes || "")).toLowerCase(); if (hay.indexOf(q) === -1) return false; }
+      return true;
+    });
+    var order = ["pen", "ink", "notebook", "paper"];
+    var html = order.map(function (cat) {
+      var list = items.filter(function (it) { return it.category === cat; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+      if (!list.length) return "";
+      var icon = cat === "ink" ? "i-drop" : "i-box";
+      return '<div class="inv-group"><div class="inv-cat"><svg class="nibmark" style="width:14px;height:16px;color:var(--accent)"><use href="#' + (cat === "pen" ? "i-nib" : icon) + '"/></svg>' + CAT_LABEL[cat] + ' <span class="c">' + list.length + '</span></div><div class="inv-items">' +
+        list.map(function (it) {
+          var untried = isUntried(it, used);
+          return '<div class="inv-item"><button class="del" data-invdel="' + it.id + '" title="Delete">✕</button>' +
+            '<div class="inv-main"><span class="inv-name">' + esc(it.name) + '</span>' + (untried ? '<span class="badge-untried">untried</span>' : '') + '</div>' +
+            (it.notes ? '<div class="inv-notes">' + esc(it.notes) + '</div>' : '') + '</div>';
+        }).join("") + '</div></div>';
+    }).join("");
+    if (!html && inventory.length) html = '<div class="rec-note" style="text-align:center;padding:24px">No items match those filters.</div>';
+    $("invList").innerHTML = html;
+    var total = inventory.length;
+    $("invEmpty").hidden = total !== 0;
+    $("invList").hidden = total === 0;
+    $("invCount").textContent = total ? (items.length === total ? "· " + total : "· " + items.length + " of " + total) : "";
+  }
+
+  function setInvCat(cat) {
+    invCat = cat;
+    document.querySelectorAll("#invCatSeg button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-cat") === cat); });
+    var input = $("invName");
+    var map = { pen: ["penList", "e.g. Lamy 2000"], ink: ["inkList", "e.g. Iroshizuku Kon-peki"], notebook: ["paperList", "e.g. Leuchtturm1917"], paper: ["paperList", "e.g. Rhodia 80gsm"] };
+    input.setAttribute("list", map[cat][0]); input.placeholder = map[cat][1];
+  }
+  function openInvSheet() { $("invSheet").hidden = false; setTimeout(function () { $("invName").focus(); }, 40); }
+  function closeInvSheet() { $("invSheet").hidden = true; }
+
+  function initInv() {
+    document.querySelectorAll("#invCatSeg button").forEach(function (b) {
+      b.addEventListener("click", function () { setInvCat(b.getAttribute("data-cat")); });
+    });
+    setInvCat("pen");
+    $("invForm").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var name = $("invName").value.trim(); if (!name) return;
+      var item = { id: uid(), category: invCat, name: name, notes: $("invNotes").value.trim(), created: Date.now() };
+      inventory.push(item);
+      try { saveInv(); } catch (err) { inventory.pop(); alert("Storage is full. Back up and clear some data, then try again."); return; }
+      $("invName").value = ""; $("invNotes").value = "";
+      closeInvSheet(); refreshDatalists(); renderInv();
+    });
+    $("invList").addEventListener("click", function (ev) {
+      var btn = ev.target.closest("[data-invdel]"); if (!btn) return;
+      var id = btn.getAttribute("data-invdel");
+      var it = inventory.find(function (x) { return x.id === id; });
+      if (confirm("Remove " + (it ? it.name : "this item") + " from your inventory?")) {
+        inventory = inventory.filter(function (x) { return x.id !== id; });
+        try { saveInv(); } catch (e) {} refreshDatalists(); renderInv();
+      }
+    });
+    $("invClose").addEventListener("click", closeInvSheet);
+    $("invSheet").addEventListener("click", function (e) { if (e.target === $("invSheet")) closeInvSheet(); });
+    $("invEmptyAdd").addEventListener("click", openInvSheet);
+    ["invSearch", "invFilterCat", "invUntried"].forEach(function (id) { $(id).addEventListener(id === "invSearch" ? "input" : "change", renderInv); });
+  }
+
   /* ---------- photo ---------- */
   function compressImage(file, cb) {
     var img = new Image(), url = URL.createObjectURL(file);
@@ -912,9 +1094,9 @@
   }
   function csvCell(v) { v = String(v == null ? "" : v); if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"'; return v; }
   function exportJSON() {
-    if (!entries.length) { alert("Nothing to back up yet."); return; }
+    if (!entries.length && !inventory.length) { alert("Nothing to back up yet."); return; }
     var stamp = new Date().toISOString().slice(0, 10);
-    downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: entries }, null, 2), "trinity-backup-" + stamp + ".json", "application/json");
+    downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: entries, inventory: inventory }, null, 2), "trinity-backup-" + stamp + ".json", "application/json");
   }
   function importJSON(file) {
     var reader = new FileReader();
@@ -923,12 +1105,14 @@
         var data = JSON.parse(reader.result);
         var list = Array.isArray(data) ? data : (data && Array.isArray(data.entries) ? data.entries : null);
         if (!list) { alert("That file does not look like a Trinity backup."); return; }
-        if (entries.length && !confirm("Import " + list.length + " entries? This replaces your current " + entries.length + " entries.")) return;
-        var prev = entries;
+        var invList = (data && Array.isArray(data.inventory)) ? data.inventory : null;
+        if ((entries.length || inventory.length) && !confirm("Import this backup? It replaces your current " + entries.length + " log entries" + (invList ? " and " + inventory.length + " inventory items" : "") + ".")) return;
+        var prevE = entries, prevI = inventory;
         entries = list.map(function (e) { return { id: e.id || uid(), pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "", experience: Number(e.experience != null ? e.experience : e.quality) || 3, comments: e.comments || "", photo: e.photo || "", created: e.created || Date.now() }; });
-        try { save(); } catch (err) { entries = prev; alert("Import too large for this browser's storage. Try a backup with fewer photos."); return; }
-        refreshDatalists(); refreshNibFilter(); render();
-        alert("Imported " + entries.length + " entries.");
+        if (invList) inventory = invList.map(function (it) { return { id: it.id || uid(), category: it.category || "pen", name: it.name || "", notes: it.notes || "", created: it.created || Date.now() }; });
+        try { save(); saveInv(); } catch (err) { entries = prevE; inventory = prevI; alert("Import too large for this browser's storage. Try a backup with fewer photos."); return; }
+        refreshDatalists(); refreshNibFilter(); render(); renderInv();
+        alert("Imported " + entries.length + " entries" + (invList ? " and " + inventory.length + " inventory items" : "") + ".");
       } catch (err) { alert("Could not read that file: " + err.message); }
     };
     reader.readAsText(file);
@@ -976,7 +1160,7 @@
 
   $("recBtn").addEventListener("click", recommend);
 
-  $("fab").addEventListener("click", openSheet);
+  $("fab").addEventListener("click", function () { if (currentViewName === "inv") openInvSheet(); else openSheet(); });
   $("emptyAdd").addEventListener("click", openSheet);
   $("addClose").addEventListener("click", closeSheet);
   $("addSheet").addEventListener("click", function (e) { if (e.target === $("addSheet")) closeSheet(); });
@@ -1007,13 +1191,17 @@
   $("importFile").addEventListener("change", function (ev) { if (ev.target.files && ev.target.files[0]) importJSON(ev.target.files[0]); ev.target.value = ""; });
   $("mClear").addEventListener("click", function () {
     $("dataMenu").hidden = true;
-    if (!entries.length) { alert("Nothing to clear."); return; }
-    if (confirm("Delete ALL " + entries.length + " combinations? This cannot be undone. Consider Backup first.")) { entries = []; try { save(); } catch (e) {} refreshDatalists(); refreshNibFilter(); render(); }
+    if (!entries.length && !inventory.length) { alert("Nothing to clear."); return; }
+    if (confirm("Delete ALL your log entries (" + entries.length + ") and inventory items (" + inventory.length + ")? This cannot be undone. Consider Backup first.")) {
+      entries = []; inventory = [];
+      try { save(); saveInv(); } catch (e) {}
+      refreshDatalists(); refreshNibFilter(); render(); renderInv();
+    }
   });
   $("clearAll").addEventListener("click", function (ev) { ev.preventDefault(); $("mClear").click(); });
 
   /* ---------- boot ---------- */
-  initTheme(); initProfile(); initNav(); initNibSelect(); initRec(); refreshDatalists(); refreshNibFilter(); render();
+  initTheme(); initProfile(); initNav(); initNibSelect(); initRec(); initInv(); refreshDatalists(); refreshNibFilter(); render(); renderInv();
   if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 })();
 </script>
