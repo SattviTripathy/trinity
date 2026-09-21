@@ -183,12 +183,32 @@
   .rec-motif { width: 100%; max-width: 300px; height: 190px; display: block; margin: 0 auto 6px; }
   .rec-form { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 6px; }
   .rec-result { margin-top: 16px; }
-  .rec-line { padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; margin-top: 9px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--panel); }
+  .rec-line { padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; margin-top: 9px; display: flex; flex-direction: column; gap: 7px; background: var(--panel); }
   .rec-line.top { border-color: var(--good); background: color-mix(in srgb, var(--good) 9%, var(--panel)); }
+  .rec-line .rec-top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .rec-line .rec-bottom { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .rec-line .rank { font-weight: 700; color: var(--muted); }
-  .rec-line .paper-name { font-weight: 700; }
+  .rec-line .paper-name { font-weight: 700; overflow-wrap: anywhere; }
   .rec-line .why { color: var(--muted); font-size: 13px; }
   .rec-note { color: var(--muted); font-size: 14px; margin-top: 8px; }
+  .rec-legend { display: flex; gap: 16px; justify-content: center; margin: 2px 0 12px; font-size: 12px; font-weight: 600; }
+  .rec-legend .chip.have { color: var(--accent); }
+  .rec-legend .chip.find { color: var(--good); }
+  .rec-controls { display: flex; flex-direction: column; gap: 10px; }
+  .vtx { border: 1px solid var(--line); border-radius: 12px; padding: 12px 13px; background: var(--panel); }
+  .vtx.find { border-color: var(--good); background: color-mix(in srgb, var(--good) 7%, var(--panel)); }
+  .vtx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .vtx-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .vtx-name .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); flex: none; }
+  .vtx.find .vtx-name .dot { background: var(--good); }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; flex: none; }
+  .seg button { background: none; border: none; padding: 8px 13px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; }
+  .seg button.active { background: var(--accent); color: #fff; }
+  .vtx.find .seg button.active { background: var(--good); }
+  .vtx-input { margin-top: 11px; }
+  .vtx.find .vtx-input { display: none; }
+  .rec-line .lbl { color: var(--muted); font-weight: 400; }
+  .rec-part { margin-right: 6px; white-space: nowrap; }
 
   /* ---------- FAQ ---------- */
   details.faq { border: 1px solid var(--line); border-radius: 11px; padding: 0 15px; margin-top: 10px; background: var(--panel); }
@@ -389,21 +409,38 @@
   <!-- ===== RECOMMENDER VIEW ===== -->
   <section class="view" id="viewRec" hidden>
     <div class="view-head"><div class="view-title serif"><svg class="drop"><use href="#i-drop"/></svg> Pairing recommender</div></div>
-    <p class="view-sub">Pick a pen and an ink you have logged. Trinity finds the paper that scored best.</p>
+    <p class="view-sub">You are in the driver's seat. Mark what you already have, and what you want Trinity to find. Fix two corners to find one, or fix one to find a pair.</p>
     <svg class="rec-motif" viewBox="0 0 300 190" aria-hidden="true">
       <path d="M150 22 L268 168 L32 168 Z" fill="none" stroke="var(--line-strong)" stroke-width="2" stroke-linejoin="round"/>
-      <circle cx="150" cy="22" r="7" fill="var(--accent)"/>
-      <circle cx="32" cy="168" r="7" fill="var(--accent)"/>
-      <circle id="paperNode" cx="268" cy="168" r="7" fill="var(--line-strong)"/>
+      <circle id="penNode" cx="150" cy="22" r="7" fill="var(--accent)"/>
+      <circle id="inkNode" cx="32" cy="168" r="7" fill="var(--accent)"/>
+      <circle id="paperNode" cx="268" cy="168" r="7" fill="var(--good)"/>
       <text x="150" y="14" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Pen</text>
       <text x="20" y="184" text-anchor="start" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Ink</text>
-      <text x="280" y="184" text-anchor="end" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Paper?</text>
+      <text x="280" y="184" text-anchor="end" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Paper</text>
     </svg>
-    <div class="rec-form">
-      <div><label for="recPen">Pen</label><input type="text" id="recPen" list="penList" placeholder="Pick a pen you've logged" /></div>
-      <div><label for="recInk">Ink</label><input type="text" id="recInk" list="inkList" placeholder="Pick an ink you've logged" /></div>
-      <button class="btn block" id="recBtn" type="button">Recommend a paper</button>
+    <div class="rec-legend"><span class="chip have">● I have it</span><span class="chip find">● Find it for me</span></div>
+    <div class="rec-controls">
+      <div class="vtx" data-field="pen">
+        <div class="vtx-head"><span class="vtx-name"><span class="dot"></span>Pen</span>
+          <div class="seg"><button type="button" data-mode="have">I have it</button><button type="button" data-mode="find">Find it</button></div>
+        </div>
+        <input type="text" class="vtx-input" id="rec_pen" list="penList" placeholder="Which pen?" />
+      </div>
+      <div class="vtx" data-field="ink">
+        <div class="vtx-head"><span class="vtx-name"><span class="dot"></span>Ink</span>
+          <div class="seg"><button type="button" data-mode="have">I have it</button><button type="button" data-mode="find">Find it</button></div>
+        </div>
+        <input type="text" class="vtx-input" id="rec_ink" list="inkList" placeholder="Which ink?" />
+      </div>
+      <div class="vtx" data-field="paper">
+        <div class="vtx-head"><span class="vtx-name"><span class="dot"></span>Paper</span>
+          <div class="seg"><button type="button" data-mode="have">I have it</button><button type="button" data-mode="find">Find it</button></div>
+        </div>
+        <input type="text" class="vtx-input" id="rec_paper" list="paperList" placeholder="Which paper?" />
+      </div>
     </div>
+    <button class="btn block" id="recBtn" type="button" style="margin-top:12px">Recommend</button>
     <div class="rec-result" id="recResult"></div>
   </section>
 
@@ -761,28 +798,80 @@
     $("logCount").textContent = entries.length ? (rows.length === entries.length ? "· " + entries.length : "· " + rows.length + " of " + entries.length) : "";
   }
 
-  /* ---------- recommender ---------- */
+  /* ---------- recommender (user picks what to find) ---------- */
+  var REC_FIELDS = ["pen", "ink", "paper"];
+  var recRoles = { pen: "have", ink: "have", paper: "find" };
+  function recLabel(f) { return f === "pen" ? "Pen" : f === "ink" ? "Ink" : "Paper"; }
+
+  function updateRecUI() {
+    REC_FIELDS.forEach(function (f) {
+      var card = document.querySelector('.vtx[data-field="' + f + '"]');
+      var find = recRoles[f] === "find";
+      if (card) {
+        card.classList.toggle("find", find);
+        card.querySelectorAll(".seg button").forEach(function (b) {
+          b.classList.toggle("active", b.getAttribute("data-mode") === recRoles[f]);
+        });
+      }
+      var node = $(f + "Node");
+      if (node) node.setAttribute("fill", find ? "var(--good)" : "var(--accent)");
+    });
+  }
+  function initRec() {
+    document.querySelectorAll(".vtx .seg button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var field = b.closest(".vtx").getAttribute("data-field");
+        recRoles[field] = b.getAttribute("data-mode");
+        updateRecUI();
+      });
+    });
+    updateRecUI();
+  }
   function recommend() {
-    var pen = $("recPen").value.trim().toLowerCase(), ink = $("recInk").value.trim().toLowerCase(), box = $("recResult");
-    var paperNode = $("paperNode");
-    if (!pen && !ink) { box.innerHTML = '<div class="rec-note">Enter a pen and/or ink you have logged, then tap Recommend.</div>'; paperNode.setAttribute("fill", "var(--line-strong)"); return; }
-    var matches = entries.filter(function (e) { return (!pen || e.pen.toLowerCase() === pen) && (!ink || e.ink.toLowerCase() === ink); });
-    if (!matches.length) { box.innerHTML = '<div class="rec-note">No logged combinations for that pen and ink yet. Add a few ratings and the recommendation will sharpen.</div>'; paperNode.setAttribute("fill", "var(--line-strong)"); return; }
-    var byPaper = {};
-    matches.forEach(function (e) { var k = (e.paper || "").trim(); if (!k) return; if (!byPaper[k]) byPaper[k] = { paper: k, sum: 0, n: 0 }; byPaper[k].sum += Number(e.experience) || 0; byPaper[k].n += 1; });
-    var ranked = Object.keys(byPaper).map(function (k) { var r = byPaper[k]; r.avg = r.sum / r.n; return r; })
+    var box = $("recResult");
+    var knowns = [], targets = [];
+    REC_FIELDS.forEach(function (f) {
+      if (recRoles[f] === "find") { targets.push(f); }
+      else { var v = $("rec_" + f).value.trim(); if (v) knowns.push({ f: f, v: v.toLowerCase(), raw: v }); }
+    });
+
+    if (!targets.length) { box.innerHTML = '<div class="rec-note">Set at least one corner to <strong>Find it</strong>, then tap Recommend.</div>'; return; }
+    if (recRoles.pen !== "find" && recRoles.ink !== "find" && recRoles.paper !== "find") { return; }
+
+    var matches = entries.filter(function (e) {
+      return knowns.every(function (k) { return (e[k.f] || "").toLowerCase() === k.v; });
+    });
+    if (!matches.length) {
+      var msg = knowns.length ? "Nothing in your log matches what you specified yet." : "Your log is empty. Add a few combinations first.";
+      box.innerHTML = '<div class="rec-note">' + msg + '</div>'; return;
+    }
+
+    var groups = {};
+    matches.forEach(function (e) {
+      var parts = targets.map(function (t) { return (e[t] || "").trim(); });
+      if (parts.some(function (p) { return !p; })) return; // skip entries missing a target value
+      var key = parts.join(" ||| ");
+      if (!groups[key]) groups[key] = { parts: parts, sum: 0, n: 0 };
+      groups[key].sum += Number(e.experience) || 0; groups[key].n += 1;
+    });
+    var ranked = Object.keys(groups).map(function (k) { var g = groups[k]; g.avg = g.sum / g.n; return g; })
       .sort(function (a, b) { return b.avg !== a.avg ? b.avg - a.avg : b.n - a.n; });
-    paperNode.setAttribute("fill", "var(--good)");
-    var label = []; if (pen) label.push($("recPen").value.trim()); if (ink) label.push($("recInk").value.trim());
-    var html = '<div class="rec-note">For <strong>' + esc(label.join(" + ")) + '</strong>, ranked by your average experience:</div>';
-    html += ranked.map(function (r, i) {
-      var qn = Math.max(1, Math.min(5, Math.round(r.avg)));
-      var evidence = r.n === 1 ? "1 entry" : r.n + " entries";
+    if (!ranked.length) { box.innerHTML = '<div class="rec-note">No entries carry the piece you asked for yet.</div>'; return; }
+
+    var knownLabel = knowns.length ? knowns.map(function (k) { return esc(k.raw); }).join(" + ") : "your whole log";
+    var findLabel = targets.map(recLabel).join(" + ");
+    var html = '<div class="rec-note">Best <strong>' + esc(findLabel) + '</strong> for <strong>' + knownLabel + '</strong>, by your average experience:</div>';
+    html += ranked.map(function (g, i) {
+      var qn = Math.max(1, Math.min(5, Math.round(g.avg)));
+      var evidence = g.n === 1 ? "1 entry" : g.n + " entries";
+      var value = targets.map(function (t, idx) {
+        return '<span class="rec-part">' + (targets.length > 1 ? '<span class="lbl">' + recLabel(t) + ':</span> ' : '') + esc(g.parts[idx]) + '</span>';
+      }).join("");
       return '<div class="rec-line' + (i === 0 ? " top" : "") + '">' +
-        (i === 0 ? '<span>🏆</span>' : '<span class="rank">#' + (i + 1) + '</span>') +
-        '<span class="paper-name">' + esc(r.paper) + '</span>' +
-        '<span class="pill q' + qn + '">' + EXP_WORDS[qn] + '</span>' +
-        '<span class="why">avg ' + r.avg.toFixed(1) + ' / 5 · ' + evidence + '</span></div>';
+        '<div class="rec-top">' + (i === 0 ? '<span>🏆</span>' : '<span class="rank">#' + (i + 1) + '</span>') +
+        '<span class="paper-name">' + value + '</span></div>' +
+        '<div class="rec-bottom"><span class="pill q' + qn + '">' + EXP_WORDS[qn] + '</span>' +
+        '<span class="why">avg ' + g.avg.toFixed(1) + ' / 5 · ' + evidence + '</span></div></div>';
     }).join("");
     box.innerHTML = html;
   }
@@ -924,7 +1013,7 @@
   $("clearAll").addEventListener("click", function (ev) { ev.preventDefault(); $("mClear").click(); });
 
   /* ---------- boot ---------- */
-  initTheme(); initProfile(); initNav(); initNibSelect(); refreshDatalists(); refreshNibFilter(); render();
+  initTheme(); initProfile(); initNav(); initNibSelect(); initRec(); refreshDatalists(); refreshNibFilter(); render();
   if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 })();
 </script>
