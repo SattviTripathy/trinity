@@ -511,7 +511,7 @@
     <details class="faq"><summary>Can I install it like an app?</summary><div class="faq-body">Yes. Trinity is a PWA. Use your browser's <strong>Install app</strong> or <strong>Add to Home Screen</strong> option. It then opens in its own window and works offline.</div></details>
     <details class="faq"><summary>My pen or ink is from a small maker. Will it work?</summary><div class="faq-body">Just type the full name. The suggestions only save keystrokes for common brands. Anything you type is accepted and remembered for next time.</div></details>
     <details class="faq"><summary>How do I add a photo?</summary><div class="faq-body">In the add sheet, tap <strong>Add photo</strong>. On a phone this can open the camera. The image is shrunk on your device before it is saved, so it stays small.</div></details>
-    <details class="faq"><summary>What is the Inventory tab?</summary><div class="faq-body">A list of the pens, inks, notebooks and papers you own. Your items feed the autofill suggestions across the app, and anything you have not paired in the log yet is tagged <strong>untried</strong>, so it doubles as a to-try list.</div></details>
+    <details class="faq"><summary>What is the Inventory tab?</summary><div class="faq-body">A list of the pens, inks, notebooks and papers you own. Whenever you log a combination, any new pen, ink or paper is added here automatically. Your items feed the autofill suggestions across the app, and anything you own but have not paired yet is tagged <strong>untried</strong>, so it doubles as a to-try list. New papers land under Papers, since the log does not split notebooks from loose paper.</div></details>
 
     <div class="geek-head"><svg class="nibmark"><use href="#i-nib"/></svg> For the geeks</div>
 
@@ -1002,6 +1002,25 @@
     if (item.category === "ink") return !used.ink[n];
     return !used.paper[n]; // notebooks and papers both map to the log's paper field
   }
+  function invHasName(cats, name) {
+    var n = (name || "").toLowerCase();
+    return inventory.some(function (it) { return cats.indexOf(it.category) !== -1 && (it.name || "").toLowerCase() === n; });
+  }
+  // Auto-add any pen/ink/paper from a new log entry that is not already in inventory.
+  function syncInventoryFromEntry(e) {
+    var changed = false;
+    function add(category, cats, name) {
+      name = (name || "").trim();
+      if (!name || invHasName(cats, name)) return;
+      inventory.push({ id: uid(), category: category, name: name, notes: "", created: Date.now() });
+      changed = true;
+    }
+    add("pen", ["pen"], e.pen);
+    add("ink", ["ink"], e.ink);
+    add("paper", ["notebook", "paper"], e.paper); // log has no notebook/paper split, so default to Papers
+    if (changed) { try { saveInv(); } catch (err) {} }
+    return changed;
+  }
   function renderInv() {
     var q = $("invSearch").value.trim().toLowerCase();
     var fc = $("invFilterCat").value;
@@ -1155,7 +1174,8 @@
       if (entry.photo) { entry.photo = ""; entries.push(entry); try { save(); alert("Storage was full, so the entry was saved without the photo. Consider Backup to free space."); } catch (e2) { entries.pop(); alert("Storage is full. Back up and clear some entries, then try again."); return; } }
       else { alert("Storage is full. Back up and clear some entries, then try again."); return; }
     }
-    resetForm(); closeSheet(); refreshDatalists(); refreshNibFilter(); render();
+    syncInventoryFromEntry(entry);
+    resetForm(); closeSheet(); refreshDatalists(); refreshNibFilter(); render(); renderInv();
   });
 
   $("logList").addEventListener("click", function (ev) {
