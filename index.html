@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Trinity — pen · ink · paper log</title>
-<meta name="description" content="A tiny offline log for your fountain-pen combinations: pen, ink, paper, quality — with a pairing recommender. Your data stays in your browser." />
+<title>Trinity · pen, ink, paper log</title>
+<meta name="description" content="An offline log for your fountain-pen combinations: pen, nib, ink, paper, and how they wrote. With a pairing recommender. Your data stays in your browser." />
+<meta name="theme-color" content="#6b4f9e" />
+<link rel="manifest" href="manifest.json" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%92%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="icon-192.png" />
 <style>
   :root {
     --bg: #f6f4ef;
@@ -51,6 +54,7 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { margin: 0; }
   body {
     background: var(--bg);
@@ -69,11 +73,29 @@
   }
   h1 .mark { color: var(--accent); }
   .tagline { color: var(--muted); font-size: 14px; }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
   .theme-btn {
     border: 1px solid var(--line-strong); background: var(--panel); color: var(--muted);
-    border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+    border-radius: 999px; padding: 8px 12px; font-size: 13px; cursor: pointer; white-space: nowrap;
   }
   .theme-btn:hover { color: var(--ink); }
+
+  /* Profile chip */
+  .profile {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--panel);
+    border-radius: 999px; padding: 6px 14px 6px 6px; max-width: 260px;
+  }
+  .profile:hover { border-color: var(--accent); }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 15px;
+  }
+  .profile-text { min-width: 0; }
+  .profile-name { font-size: 14px; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-quote { font-size: 12px; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .card {
     background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
@@ -81,19 +103,21 @@
   }
   .card h2 {
     font-family: Georgia, serif; font-size: 17px; margin: 0 0 14px; font-weight: 600;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   }
   .card h2 .count { color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; }
 
   /* Add form */
   .addform { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; align-items: end; }
   .field { display: flex; flex-direction: column; gap: 5px; }
-  .field.pen { grid-column: span 3; }
-  .field.ink { grid-column: span 3; }
-  .field.paper { grid-column: span 3; }
-  .field.quality { grid-column: span 3; }
-  .field.comments { grid-column: span 9; }
-  .field.default { grid-column: span 3; }
+  .field.pen { grid-column: span 4; }
+  .field.nib { grid-column: span 3; }
+  .field.ink { grid-column: span 5; }
+  .field.paper { grid-column: span 5; }
+  .field.experience { grid-column: span 3; }
+  .field.submit { grid-column: span 4; }
+  .field.comments { grid-column: span 12; }
+  .field.nibother { grid-column: span 12; }
   label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
   input[type="text"], select, textarea {
     background: var(--bg); color: var(--ink); border: 1px solid var(--line-strong);
@@ -101,9 +125,6 @@
   }
   textarea { resize: vertical; min-height: 40px; }
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-  .check-inline { display: flex; align-items: center; gap: 8px; height: 40px; }
-  .check-inline input { width: 18px; height: 18px; accent-color: var(--accent); }
-  .check-inline span { font-size: 14px; color: var(--ink); text-transform: none; letter-spacing: 0; font-weight: 400; }
 
   .btn {
     background: var(--accent); color: #fff; border: none; border-radius: 9px;
@@ -112,19 +133,17 @@
   .btn:hover { filter: brightness(1.05); }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line-strong); }
   .btn.ghost:hover { background: var(--accent-soft); }
-  .btn.tiny { padding: 5px 10px; font-size: 12px; }
-  .actions-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
-  .field.submit { grid-column: span 3; }
+  .btn.tiny { padding: 6px 12px; font-size: 12px; }
 
   /* Toolbar */
   .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-  .toolbar input[type="text"] { max-width: 240px; }
-  .toolbar select { max-width: 190px; }
+  .toolbar input[type="text"] { max-width: 230px; }
+  .toolbar select { max-width: 180px; }
   .spacer { flex: 1; }
 
   /* Table */
   .table-scroll { overflow-x: auto; margin: 0 -6px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 720px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 760px; }
   thead th {
     text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
     color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--line-strong);
@@ -134,7 +153,8 @@
   thead th .arrow { opacity: .4; font-size: 10px; }
   tbody td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   tbody tr:hover { background: var(--accent-soft); }
-  td.comments { color: var(--muted); max-width: 260px; }
+  td.comments { color: var(--muted); max-width: 240px; }
+  td.nib { white-space: nowrap; color: var(--muted); }
   .pill {
     display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
   }
@@ -143,18 +163,12 @@
   .q3 { background: #eee9d8; color: #6d6338; }
   .q4 { background: #d9ecdb; color: #2f6a44; }
   .q5 { background: #cfe6e9; color: #216068; }
-  :root[data-theme="dark"] .q1, :root:not([data-theme="light"]) .q1 { }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-    --dq: 1;
-  }}
-  .badge-default { font-size: 16px; }
   .row-actions { white-space: nowrap; text-align: right; }
   .icon-btn {
     background: transparent; border: 1px solid var(--line); border-radius: 7px; cursor: pointer;
     padding: 4px 8px; font-size: 13px; color: var(--muted);
   }
   .icon-btn:hover { color: var(--bad); border-color: var(--bad); }
-
   .empty { text-align: center; color: var(--muted); padding: 34px 10px; font-style: italic; }
 
   /* Recommender */
@@ -166,28 +180,66 @@
   .rec-line .why { color: var(--muted); font-size: 13px; }
   .rec-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
 
-  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; }
+  /* FAQ */
+  details.faq { border: 1px solid var(--line); border-radius: 9px; padding: 0 14px; margin-top: 10px; background: var(--bg); }
+  details.faq[open] { padding-bottom: 14px; }
+  details.faq summary {
+    cursor: pointer; padding: 12px 0; font-weight: 600; font-size: 14px; list-style: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  details.faq summary::-webkit-details-marker { display: none; }
+  details.faq summary::before { content: "+"; color: var(--accent); font-weight: 700; font-size: 16px; width: 14px; }
+  details.faq[open] summary::before { content: "\2212"; }
+  details.faq .faq-body { color: var(--muted); font-size: 14px; padding-bottom: 2px; }
+  details.faq .faq-body code { background: var(--accent-soft); color: var(--accent); padding: 1px 5px; border-radius: 5px; font-size: 13px; }
+  details.faq .faq-body ol, details.faq .faq-body ul { margin: 6px 0; padding-left: 20px; }
+  details.faq .faq-body li { margin: 4px 0; }
+  .geek-head { margin: 22px 0 4px; font-family: Georgia, serif; font-size: 15px; font-weight: 600; color: var(--ink); }
+  .geek-head .sub { color: var(--muted); font-weight: 400; font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(20,16,24,.5); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+  }
+  .modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow); padding: 22px; width: 100%; max-width: 420px;
+  }
+  .modal h3 { font-family: Georgia, serif; margin: 0 0 4px; font-size: 20px; }
+  .modal-sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .modal label { display: block; margin: 12px 0 5px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; line-height: 1.9; }
   footer a { color: var(--accent); }
 
   @media (max-width: 720px) {
     .addform { grid-template-columns: repeat(2, 1fr); }
-    .field.pen, .field.ink, .field.paper, .field.quality { grid-column: span 1; }
-    .field.comments { grid-column: span 2; }
-    .field.default, .field.submit { grid-column: span 1; }
+    .field.pen, .field.nib, .field.ink, .field.paper, .field.experience, .field.submit { grid-column: span 1; }
+    .field.comments, .field.nibother { grid-column: span 2; }
     .rec-form { grid-template-columns: 1fr; }
+    .profile { max-width: 190px; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div>
-      <div class="brand">
-        <h1><span class="mark">✒</span> Trinity</h1>
-        <span class="tagline">pen · ink · paper — a log of what writes well together</span>
-      </div>
+    <div class="brand">
+      <h1><span class="mark">✒</span> Trinity</h1>
+      <span class="tagline">your log of what pen, nib, ink and paper write well together</span>
     </div>
-    <button class="theme-btn" id="themeBtn" title="Toggle theme">◐ Theme</button>
+    <div class="header-right">
+      <div class="profile" id="profileChip" role="button" tabindex="0" title="Edit your profile">
+        <div class="avatar" id="avatar">✒</div>
+        <div class="profile-text">
+          <div class="profile-name" id="profileName">Set up profile</div>
+          <div class="profile-quote" id="profileQuote"></div>
+        </div>
+      </div>
+      <button class="theme-btn" id="themeBtn" title="Toggle theme">◐</button>
+    </div>
   </header>
 
   <!-- Add a combination -->
@@ -196,19 +248,27 @@
     <form class="addform" id="addForm" autocomplete="off">
       <div class="field pen">
         <label for="pen">Pen</label>
-        <input type="text" id="pen" list="penList" placeholder="e.g. Lamy 2000 (EF)" required />
+        <input type="text" id="pen" list="penList" placeholder="Type any pen, e.g. Ranga Model 3" required />
+      </div>
+      <div class="field nib">
+        <label for="nib">Nib</label>
+        <select id="nib"></select>
       </div>
       <div class="field ink">
         <label for="ink">Ink</label>
-        <input type="text" id="ink" list="inkList" placeholder="e.g. Iroshizuku Kon-peki" required />
+        <input type="text" id="ink" list="inkList" placeholder="Type any ink, e.g. Krishna Sea at Night" required />
+      </div>
+      <div class="field nibother" id="nibOtherWrap" hidden>
+        <label for="nibOther">Your nib</label>
+        <input type="text" id="nibOther" placeholder="Describe your special nib" />
       </div>
       <div class="field paper">
         <label for="paper">Paper</label>
-        <input type="text" id="paper" list="paperList" placeholder="e.g. Tomoe River 52gsm" required />
+        <input type="text" id="paper" list="paperList" placeholder="Type any paper, e.g. JK Paper 100gsm" required />
       </div>
-      <div class="field quality">
-        <label for="quality">Quality</label>
-        <select id="quality">
+      <div class="field experience">
+        <label for="experience">Experience</label>
+        <select id="experience">
           <option value="1">Poor</option>
           <option value="2">Fair</option>
           <option value="3" selected>Good</option>
@@ -216,20 +276,13 @@
           <option value="5">Excellent</option>
         </select>
       </div>
-      <div class="field comments">
-        <label for="comments">Comments</label>
-        <textarea id="comments" placeholder="Feathering? Dry time? Sheen? How it felt…"></textarea>
-      </div>
-      <div class="field default">
-        <label>Setup</label>
-        <div class="check-inline">
-          <input type="checkbox" id="isDefault" checked />
-          <span>Default go-to pairing</span>
-        </div>
-      </div>
       <div class="field submit">
         <label>&nbsp;</label>
         <button class="btn" type="submit">Add to log</button>
+      </div>
+      <div class="field comments">
+        <label for="comments">Comments</label>
+        <textarea id="comments" placeholder="Feathering? Dry time? Sheen? How it felt…"></textarea>
       </div>
     </form>
     <datalist id="penList"></datalist>
@@ -261,32 +314,31 @@
   <section class="card">
     <h2>Your log <span class="count" id="logCount"></span></h2>
     <div class="toolbar">
-      <input type="text" id="search" placeholder="Search pen, ink, paper, comments…" />
-      <select id="filterQuality">
-        <option value="">All qualities</option>
+      <input type="text" id="search" placeholder="Search pen, nib, ink, paper, comments…" />
+      <select id="filterExperience">
+        <option value="">All experiences</option>
         <option value="5">Excellent</option>
         <option value="4">Great</option>
         <option value="3">Good</option>
         <option value="2">Fair</option>
         <option value="1">Poor</option>
       </select>
-      <select id="filterDefault">
-        <option value="">Default &amp; experimental</option>
-        <option value="1">Default only</option>
-        <option value="0">Experimental only</option>
-      </select>
+      <select id="filterNib"><option value="">All nibs</option></select>
       <span class="spacer"></span>
+      <button class="btn ghost tiny" id="importBtn" type="button">Import</button>
+      <button class="btn ghost tiny" id="exportJsonBtn" type="button">Backup</button>
       <button class="btn ghost tiny" id="exportBtn" type="button">Export CSV</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden />
     </div>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
             <th data-sort="pen">Pen <span class="arrow"></span></th>
+            <th data-sort="nib">Nib <span class="arrow"></span></th>
             <th data-sort="ink">Ink <span class="arrow"></span></th>
             <th data-sort="paper">Paper <span class="arrow"></span></th>
-            <th data-sort="quality">Quality <span class="arrow"></span></th>
-            <th data-sort="isDefault">Default <span class="arrow"></span></th>
+            <th data-sort="experience">Experience <span class="arrow"></span></th>
             <th class="nosort">Comments</th>
             <th class="nosort"></th>
           </tr>
@@ -294,13 +346,91 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <div class="empty" id="emptyState" hidden>Nothing logged yet. Add your first pen · ink · paper combination above.</div>
+    <div class="empty" id="emptyState" hidden>Nothing logged yet. Add your first combination above.</div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="card">
+    <h2>FAQ</h2>
+
+    <details class="faq">
+      <summary>What is Trinity?</summary>
+      <div class="faq-body">A simple log for your fountain-pen combinations. Record the pen, nib, ink, and paper, rate the experience, and add notes. Over time it becomes your personal reference for what writes well together.</div>
+    </details>
+
+    <details class="faq">
+      <summary>Is my data private?</summary>
+      <div class="faq-body">Yes. Everything is saved only in this browser on this device. Nothing is uploaded, and there is no account or server.</div>
+    </details>
+
+    <details class="faq">
+      <summary>How do I back up or move my data?</summary>
+      <div class="faq-body">Use <strong>Backup</strong> to save a small file with all your entries. Use <strong>Import</strong> on another device or browser to load it back in. <strong>Export CSV</strong> gives you a spreadsheet-friendly copy.</div>
+    </details>
+
+    <details class="faq">
+      <summary>Can I install it like an app?</summary>
+      <div class="faq-body">Yes. Trinity is a PWA. Use your browser's <strong>Install app</strong> or <strong>Add to Home Screen</strong> option. After that it opens in its own window and works offline.</div>
+    </details>
+
+    <details class="faq">
+      <summary>My pen or ink is from a small maker and is not in the list. What do I do?</summary>
+      <div class="faq-body">Just type the full name. The suggestions are only there to save keystrokes for common brands. Any text you type is accepted and remembered for next time.</div>
+    </details>
+
+    <details class="faq">
+      <summary>How do I add an unusual nib?</summary>
+      <div class="faq-body">Pick <code>Other</code> at the bottom of the nib list and a box appears where you can describe it, for example an architect grind or a custom cursive italic.</div>
+    </details>
+
+    <div class="geek-head">For the geeks <span class="sub">how it works under the hood</span></div>
+
+    <details class="faq">
+      <summary>How does the pairing recommender work?</summary>
+      <div class="faq-body">
+        It turns your own ratings into a ranking. Given a pen and/or ink:
+        <ol>
+          <li>It filters your log to entries that match. Either field can be left blank, which acts as a wildcard, so you can ask "best paper for this ink, any pen".</li>
+          <li>It groups the matches by paper.</li>
+          <li>Each experience becomes a number: <code>Poor 1</code>, <code>Fair 2</code>, <code>Good 3</code>, <code>Great 4</code>, <code>Excellent 5</code>. It averages those per paper.</li>
+          <li>It ranks papers by that average, highest first. When two papers tie, the one with more entries wins, since more entries means stronger evidence.</li>
+          <li>The pill you see is the average rounded to the nearest word, and the line shows the exact average and how many entries back it.</li>
+        </ol>
+        The nib is recorded but not part of the key, so all nibs for that pen and ink are pooled together. It only ever uses your data, so the more you log, the sharper it gets.
+      </div>
+    </details>
+
+    <details class="faq">
+      <summary>Where and how is my data stored?</summary>
+      <div class="faq-body">Entries live in your browser's <code>localStorage</code> under the key <code>trinity.entries.v1</code>, as a JSON array. Your profile and theme are stored the same way. Backup exports that JSON to a file, and Import reads it back and replaces the current entries.</div>
+    </details>
+
+    <details class="faq">
+      <summary>How does offline and install work?</summary>
+      <div class="faq-body">A service worker caches the app files on first load, so Trinity opens even with no connection. When a new version is deployed, the worker fetches it in the background and it applies on your next visit.</div>
+    </details>
   </section>
 
   <footer>
-    Trinity — everything stays in this browser (localStorage). Nothing is uploaded.
-    &nbsp;·&nbsp; <a href="#" id="clearAll">Clear all data</a>
+    Everything stays in this browser. Nothing is uploaded.<br />
+    <a href="#" id="clearAll">Clear all data</a>
   </footer>
+</div>
+
+<!-- Profile modal -->
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">Welcome to Trinity</h3>
+    <p class="modal-sub">Add your name for a personal touch. Optional, and it stays on this device.</p>
+    <label for="mName">Name</label>
+    <input type="text" id="mName" placeholder="Your name" maxlength="40" />
+    <label for="mQuote">A short quote or flair (optional)</label>
+    <input type="text" id="mQuote" placeholder="e.g. Ink first, decisions later" maxlength="80" />
+    <div class="modal-actions">
+      <button class="btn ghost" id="mSkip" type="button">Skip</button>
+      <button class="btn" id="mSave" type="button">Save</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -309,11 +439,84 @@
 
   var STORE_KEY = "trinity.entries.v1";
   var THEME_KEY = "trinity.theme";
-  var QUALITY_WORDS = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Great", 5: "Excellent" };
+  var PROFILE_KEY = "trinity.profile";
+  var EXP_WORDS = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Great", 5: "Excellent" };
+
+  var NIBS = [
+    "Needlepoint", "Ultra Extra Fine", "Extra Extra Fine", "Extra Fine", "Fine",
+    "Fine-Medium", "Medium", "Medium-Broad", "Broad", "Double Broad", "Triple Broad",
+    "Stub 1.1", "Stub 1.5", "Stub 1.9", "Italic", "Cursive Italic", "Oblique",
+    "Left Oblique", "Architect", "Music", "Flex", "Soft", "Zoom", "Fude (bent)", "Posting"
+  ];
+
+  // Preloaded suggestions only. Typing any custom name is always allowed and remembered.
+  var PRELOAD_PENS = [
+    "Lamy Safari","Lamy Al-Star","Lamy Vista","Lamy 2000","Lamy Studio","Lamy Aion","Lamy Scala","Lamy Nexx","Lamy Joy","Lamy LX","Lamy CP1","Lamy Logo","Lamy Imporium","Lamy Dialog 3",
+    "Pilot Metropolitan","Pilot Kakuno","Pilot Prera","Pilot Plumix","Pilot 78G","Pilot Penmanship","Pilot Explorer","Pilot Custom 74","Pilot Custom 823","Pilot Custom 912","Pilot Custom 743","Pilot Custom Heritage 92","Pilot Custom Heritage 912","Pilot Vanishing Point","Pilot Capless","Pilot Decimo","Pilot E95s","Pilot Falcon","Pilot Elabo","Pilot Justus 95","Pilot Custom Urushi","Pilot Murex","Pilot Myu",
+    "Sailor 1911 Standard","Sailor 1911 Large","Sailor Pro Gear","Sailor Pro Gear Slim","Sailor Pro Gear King of Pen","Sailor Naginata","Sailor Fude de Mannen","Sailor Compass","Sailor Lecoule",
+    "Platinum 3776 Century","Platinum Preppy","Platinum Plaisir","Platinum Procyon","Platinum President","Platinum Curidas","Platinum Balance","Platinum Century",
+    "TWSBI Diamond 580","TWSBI Eco","TWSBI Go","TWSBI Swipe","TWSBI Vac700R","TWSBI Vac Mini","TWSBI Mini","TWSBI Classic","TWSBI Precision",
+    "Parker Jotter","Parker Vector","Parker IM","Parker Sonnet","Parker Urban","Parker Frontier","Parker 51","Parker 45","Parker Duofold","Parker Premier","Parker Aster","Parker Beta","Parker Vector XL",
+    "Waterman Expert","Waterman Hemisphere","Waterman Carene","Waterman Perspective","Waterman Allure",
+    "Sheaffer 100","Sheaffer 300","Sheaffer VFM","Sheaffer Prelude","Sheaffer Balance","Sheaffer Snorkel","Sheaffer Imperial","Sheaffer Legacy",
+    "Cross Bailey","Cross Century","Cross Townsend","Cross Calais","Cross Classic Century",
+    "Kaweco Sport","Kaweco Classic Sport","Kaweco AL Sport","Kaweco Perkeo","Kaweco Liliput","Kaweco Student","Kaweco Dia2","Kaweco Special","Kaweco Skyline Sport",
+    "Faber-Castell Loom","Faber-Castell Ambition","Faber-Castell Ondoro","Faber-Castell Essentio","Faber-Castell e-motion","Faber-Castell Grip","Faber-Castell Hexo",
+    "Pelikan M200","Pelikan M205","Pelikan M400","Pelikan M600","Pelikan M800","Pelikan M1000","Pelikan M120","Pelikan M101N","Pelikan Twist",
+    "Montblanc 146","Montblanc 149","Montblanc 144","Montblanc Meisterstuck","Montblanc StarWalker",
+    "Aurora 88","Aurora Optima","Aurora Ipsilon","Aurora Talentum",
+    "Visconti Homo Sapiens","Visconti Van Gogh","Visconti Rembrandt","Visconti Opera",
+    "Pineider Avatar","Pineider La Grande Bellezza",
+    "Leonardo Momento Zero","Leonardo Momento Zero Grande","Leonardo Furore","Leonardo MZ Grande",
+    "Opus 88 Koloro","Opus 88 Jazz","Opus 88 Omar","Opus 88 Demo","Opus 88 Picnic","Opus 88 Fantasia","Opus 88 Minty",
+    "Nahvalur Original","Nahvalur Schuylkill","Nahvalur Nautilus",
+    "Diplomat Aero","Diplomat Excellence","Diplomat Traveller","Diplomat Magnum",
+    "Otto Hutt Design 06","Otto Hutt Design 04",
+    "Conklin Duragraph","Conklin Mark Twain Crescent","Conklin All American",
+    "Esterbrook Estie","Esterbrook JR Pocket","Esterbrook Model J",
+    "Monteverde Monza","Monteverde Prima","Monteverde Invincia","Monteverde Impressa",
+    "Franklin-Christoph Model 20","Franklin-Christoph Model 02","Franklin-Christoph Model 45","Franklin-Christoph Model 66","Franklin-Christoph Model 46",
+    "Edison Collier","Edison Nouveau Premiere","Edison Beaumont",
+    "Benu Euphoria","Benu Talisman","Retro 51 Tornado","Schon DSGN Pocket Six",
+    "Jinhao X750","Jinhao 159","Jinhao 9019","Jinhao X159","Jinhao 100","Jinhao 82","Jinhao 80","Jinhao 51A","Jinhao 992",
+    "Moonman M2","Majohn A1","Majohn A2","Majohn P136","Wing Sung 3008","Wing Sung 601","Wing Sung 698","PenBBS 456","PenBBS 355",
+    "Hero 359","Hero 616","Hero 9013","Delike New Moon","Nettuno 1911",
+    "Ranga Model 3","Ranga Model 8","Ranga Abhimanyu","Ranga Bamboo","Ranga Giant","Ranga Duofold","Ranga Thin Bamboo","Ranga Regular",
+    "ASA Nauka","ASA Galactic","ASA Divine","ASA Athlete","ASA Bandar","ASA Maya","ASA Sniper","ASA Pecker",
+    "Gama Supreme","Gama Forty Eight","Gama Eyas","Gama Kubera",
+    "Fosfor Straightliner","Fosfor Sail","Fosfor Panther","Lotus Shikhar","Lotus Ripple","Lotus Rollstop",
+    "Click Aristocrat","Click Falcon","Click Renaissance","Click Bina","Click Majestic",
+    "Wality 69EB","Wality 71JT","Airmail 69L","Airmail 71B","Kanwrite Heritage","Kanwrite Desire","Kanwrite Nib Creaper",
+    "Ratnamson 302","Ratnam Supreme","Guider Acrylic","Deccan Advocate","Deccan Krishna","Oliver Pollux","Oliver Cygnus",
+    "Camlin Elegante","Cello Butterflow","Flair Inky","Hero Fountain Pen","Submarine Fountain Pen","Stylo Art Kolkata Ebonite","Magna Carta Sapphire","Magna Carta Classic"
+  ];
+  var PRELOAD_INKS = [
+    "Pilot Iroshizuku Kon-peki","Pilot Iroshizuku Asa-gao","Pilot Iroshizuku Tsuki-yo","Pilot Iroshizuku Shin-kai","Pilot Iroshizuku Yama-budo","Pilot Iroshizuku Momiji","Pilot Iroshizuku Fuyu-syogun","Pilot Iroshizuku Take-sumi","Pilot Iroshizuku Ku-jaku","Pilot Iroshizuku Chiku-rin","Pilot Iroshizuku Shin-ryoku","Pilot Iroshizuku Syo-ro","Pilot Iroshizuku Ama-iro","Pilot Iroshizuku Tsutsuji","Pilot Iroshizuku Yu-yake","Pilot Iroshizuku Murasaki-shikibu","Pilot Iroshizuku Fuyu-gaki","Pilot Iroshizuku Ina-ho","Pilot Iroshizuku Kiri-same","Pilot Iroshizuku Tsukushi","Pilot Iroshizuku Hana-ikada",
+    "Pilot Blue","Pilot Black","Pilot Blue-Black",
+    "Sailor Jentle Blue-Black","Sailor Yama-dori","Sailor Souten","Sailor Rikyu-cha","Sailor Oku-yama","Sailor Shigure","Sailor Sky High","Sailor Epinard","Sailor Grenade","Sailor Shikiori Yozakura","Sailor Shikiori Chu-shu","Sailor Shikiori Nioi-sumire","Sailor Shikiori Yodaki","Sailor Shikiori Waka-uguisu","Sailor Shikiori Miruai","Sailor Shikiori Doyou","Sailor Shikiori Fuji-musume","Sailor Shikiori Shimoyo","Sailor Manyo Haha",
+    "Diamine Oxblood","Diamine Ancient Copper","Diamine Sherwood Green","Diamine Majestic Blue","Diamine Sargasso Sea","Diamine Writer's Blood","Diamine Autumn Oak","Diamine Pumpkin","Diamine Meadow","Diamine Twilight","Diamine Registrar's","Diamine Earl Grey","Diamine Onyx Black","Diamine Prussian Blue","Diamine Aurora Borealis","Diamine Bilberry","Diamine Tyrian Purple","Diamine Damson","Diamine Regency Blue","Diamine Marine","Diamine Emerald","Diamine Grey","Diamine Skull & Roses","Diamine Blue Black","Diamine Golden Sands","Diamine Frost","Diamine Blood Orange",
+    "Waterman Serenity Blue","Waterman Mysterious Blue","Waterman Tender Purple","Waterman Absolute Brown","Waterman Inspired Blue","Waterman Intense Black","Waterman Audacious Red","Waterman Harmonious Green",
+    "Noodler's Black","Noodler's Heart of Darkness","Noodler's Baystate Blue","Noodler's 54th Massachusetts","Noodler's Apache Sunset","Noodler's Zhivago","Noodler's Bernanke Blue","Noodler's X-Feather","Noodler's Kung Te-Cheng","Noodler's Antietam",
+    "J. Herbin Perle Noire","J. Herbin Eclat de Saphir","J. Herbin Vert Empire","J. Herbin Lie de The","J. Herbin Ambre de Birmanie","J. Herbin Terre de Feu","J. Herbin Rouge Hematite","J. Herbin Emerald of Chivor","J. Herbin Stormy Grey","J. Herbin Bleu Ocean","J. Herbin Caroube de Chypre",
+    "Robert Oster Fire & Ice","Robert Oster Peppermint","Robert Oster Aussie Sunburn","Robert Oster Australian Sky","Robert Oster Blue Water Ice","Robert Oster Deep Sea","Robert Oster Astorquiza Rot","Robert Oster Torquay","Robert Oster Bronze",
+    "Montblanc Midnight Blue","Montblanc Royal Blue","Montblanc Mystery Black","Montblanc Corn Poppy Red","Montblanc Irish Green",
+    "Pelikan 4001 Royal Blue","Pelikan 4001 Blue-Black","Pelikan 4001 Brilliant Black","Pelikan 4001 Turquoise","Pelikan Edelstein Sapphire","Pelikan Edelstein Aventurine","Pelikan Edelstein Topaz","Pelikan Edelstein Tanzanite","Pelikan Edelstein Garnet","Pelikan Edelstein Amethyst","Pelikan Edelstein Star Ruby","Pelikan Edelstein Olivine","Pelikan Edelstein Moonstone",
+    "Lamy Blue","Lamy Black","Lamy Blue-Black","Lamy Turquoise","Lamy Dark Lilac","Lamy Petrol","Lamy Benitoier","Lamy Bronze","Lamy Amazonite","Lamy Vibrant Pink","Lamy Crystal Ink",
+    "Kaweco Royal Blue","Kaweco Midnight Blue","Kaweco Paradise Blue","Kaweco Palm Green","Kaweco Ruby Red","Kaweco Pearl Black","Kaweco Smokey Grey","Kaweco Sunrise Orange",
+    "Colorverse Cosmic","Vinta Inks Sirena","Ferris Wheel Press Moss Park Green","Wearingeul Cheshire Cat","Dominant Industry Blue Hour","Van Dieman's Jurassic",
+    "Krishna Sea at Night","Krishna Jungle Volcano","Krishna Pomegranate","Krishna Anokhi","Krishna Moonview","Krishna Rakthbeej","Krishna Ruby","Krishna Monsoon Sky","Krishna Superrich Green",
+    "Kala Series Ink","Camlin Royal Blue","Camlin Blue-Black","Camlin Black","Sulekha Royal Blue","Sulekha Blue-Black","Bril Royal Blue","Bril Blue-Black","Chelpark Royal Blue","Chelpark Black","Fosfor Ink",
+    "Parker Quink Blue","Parker Quink Black","Parker Quink Blue-Black","Sheaffer Skrip Blue","Sheaffer Skrip Black"
+  ];
+  var PRELOAD_PAPERS = [
+    "Tomoe River 52gsm","Tomoe River 68gsm","Tomoe River Sanzen 52gsm","Rhodia 80gsm","Rhodia dotPad","Rhodia Webnotebook","Clairefontaine 90gsm","Clairefontaine Triomphe","Leuchtturm1917","Midori MD","Life Noble","Life Vermilion","Kokuyo Campus","Maruman Mnemosyne","Apica Premium CD","Apica CD11","Nakabayashi Logical Prime","Oxford Optik Paper","Moleskine","Field Notes","Baron Fig","Write Notepads","Cosmo Air Light","Original Crown Mill","G. Lalo","Fabriano EcoQua","Fabriano Bioprima","Hobonichi Techo","Yamamoto Ro-Biki","Graphilo","Kunisawa Find","Stalogy 365","Endless Recorder","Endless Regalia","Scribbles That Matter","Dingbats","Archer & Olive","Nightowl Paper","Musubi","Curnow Bespoke","Paperblanks","Traveler's Notebook","Seven Seas Standard","Seven Seas Crossfield",
+    "JK Paper 100gsm","JK Copier","JK Cedar","Classmate Notebook","Classmate Pulse","Camlin Notebook","Sundaram Notebook","Navneet Notebook","Bilt Copy Power","Luxor Notebook","Sinarline","Trident Copy Paper","Ballarpur Copy",
+    "Copy paper 70gsm","Copy paper 75gsm","Copy paper 80gsm","Printer paper","Double A 80gsm","Bristol Board","Handmade cotton paper"
+  ];
 
   var entries = load();
-  var sortKey = "quality";
-  var sortDir = -1; // -1 desc, 1 asc
+  var sortKey = "experience";
+  var sortDir = -1;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -323,7 +526,16 @@
       var raw = localStorage.getItem(STORE_KEY);
       if (!raw) return [];
       var data = JSON.parse(raw);
-      return Array.isArray(data) ? data : [];
+      if (!Array.isArray(data)) return [];
+      // migrate old shape (quality -> experience, drop isDefault)
+      return data.map(function (e) {
+        return {
+          id: e.id || uid(),
+          pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "",
+          experience: Number(e.experience != null ? e.experience : e.quality) || 3,
+          comments: e.comments || "", created: e.created || Date.now()
+        };
+      });
     } catch (e) { return []; }
   }
   function save() {
@@ -347,6 +559,51 @@
     });
   }
 
+  /* ---------- profile ---------- */
+  function getProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null"); } catch (e) { return null; }
+  }
+  function setProfile(p) {
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {}
+    renderProfile();
+  }
+  function renderProfile() {
+    var p = getProfile() || {};
+    var name = (p.name || "").trim();
+    var quote = (p.quote || "").trim();
+    $("avatar").textContent = name ? name.charAt(0).toUpperCase() : "✒";
+    $("profileName").textContent = name || "Set up profile";
+    $("profileQuote").textContent = quote;
+    $("profileQuote").style.display = quote ? "block" : "none";
+  }
+  function openModal() {
+    var p = getProfile() || {};
+    $("mName").value = p.name || "";
+    $("mQuote").value = p.quote || "";
+    $("modal").hidden = false;
+    setTimeout(function () { $("mName").focus(); }, 30);
+  }
+  function closeModal() { $("modal").hidden = true; }
+  function initProfile() {
+    renderProfile();
+    if (!getProfile()) openModal(); // first visit only
+    $("profileChip").addEventListener("click", openModal);
+    $("profileChip").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(); }
+    });
+    $("mSave").addEventListener("click", function () {
+      setProfile({ name: $("mName").value.trim(), quote: $("mQuote").value.trim(), seen: true });
+      closeModal();
+    });
+    $("mSkip").addEventListener("click", function () {
+      setProfile(getProfile() || { name: "", quote: "", seen: true });
+      closeModal();
+    });
+    $("modal").addEventListener("click", function (e) {
+      if (e.target === $("modal")) { if (!getProfile()) setProfile({ name: "", quote: "", seen: true }); closeModal(); }
+    });
+  }
+
   /* ---------- helpers ---------- */
   function esc(s) {
     return String(s == null ? "" : s)
@@ -355,35 +612,68 @@
   }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
+  /* ---------- nib select ---------- */
+  function initNibSelect() {
+    var sel = $("nib");
+    var html = '<option value="">Nib…</option>';
+    html += NIBS.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
+    html += '<option value="__other">Other (type your own)…</option>';
+    sel.innerHTML = html;
+    sel.addEventListener("change", function () {
+      var other = sel.value === "__other";
+      $("nibOtherWrap").hidden = !other;
+      if (other) setTimeout(function () { $("nibOther").focus(); }, 20);
+    });
+  }
+  function readNib() {
+    var sel = $("nib");
+    if (sel.value === "__other") return $("nibOther").value.trim();
+    return sel.value;
+  }
+
   /* ---------- datalists ---------- */
   function refreshDatalists() {
-    fillDatalist("penList", "pen");
-    fillDatalist("inkList", "ink");
-    fillDatalist("paperList", "paper");
+    fillDatalist("penList", "pen", PRELOAD_PENS);
+    fillDatalist("inkList", "ink", PRELOAD_INKS);
+    fillDatalist("paperList", "paper", PRELOAD_PAPERS);
   }
-  function fillDatalist(id, key) {
+  function fillDatalist(id, key, preload) {
     var seen = {}, opts = [];
-    for (var i = 0; i < entries.length; i++) {
-      var v = (entries[i][key] || "").trim();
+    function add(v) {
+      v = (v || "").trim();
       if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); }
     }
+    entries.forEach(function (e) { add(e[key]); }); // user's own entries first
+    preload.forEach(add);
+    $(id).innerHTML = opts.map(function (o) { return '<option value="' + esc(o) + '"></option>'; }).join("");
+  }
+
+  /* ---------- nib filter ---------- */
+  function refreshNibFilter() {
+    var cur = $("filterNib").value;
+    var seen = {}, opts = [];
+    entries.forEach(function (e) {
+      var v = (e.nib || "").trim();
+      if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); }
+    });
     opts.sort(function (a, b) { return a.localeCompare(b); });
-    $(id).innerHTML = opts.map(function (o) { return "<option value=\"" + esc(o) + "\"></option>"; }).join("");
+    $("filterNib").innerHTML = '<option value="">All nibs</option>' +
+      opts.map(function (o) { return '<option value="' + esc(o) + '">' + esc(o) + '</option>'; }).join("");
+    if (opts.indexOf(cur) !== -1) $("filterNib").value = cur;
   }
 
   /* ---------- render table ---------- */
   function render() {
     var tbody = $("tbody");
     var q = $("search").value.trim().toLowerCase();
-    var fq = $("filterQuality").value;
-    var fd = $("filterDefault").value;
+    var fe = $("filterExperience").value;
+    var fn = $("filterNib").value;
 
     var rows = entries.filter(function (e) {
-      if (fq && String(e.quality) !== fq) return false;
-      if (fd === "1" && !e.isDefault) return false;
-      if (fd === "0" && e.isDefault) return false;
+      if (fe && String(e.experience) !== fe) return false;
+      if (fn && e.nib !== fn) return false;
       if (q) {
-        var hay = (e.pen + " " + e.ink + " " + e.paper + " " + (e.comments || "")).toLowerCase();
+        var hay = (e.pen + " " + e.nib + " " + e.ink + " " + e.paper + " " + (e.comments || "")).toLowerCase();
         if (hay.indexOf(q) === -1) return false;
       }
       return true;
@@ -391,42 +681,35 @@
 
     rows.sort(function (a, b) {
       var av = a[sortKey], bv = b[sortKey];
-      if (sortKey === "quality" || sortKey === "isDefault") {
-        av = Number(av) || 0; bv = Number(bv) || 0;
-        return (av - bv) * sortDir;
-      }
+      if (sortKey === "experience") { return ((Number(av) || 0) - (Number(bv) || 0)) * sortDir; }
       return String(av || "").localeCompare(String(bv || "")) * sortDir;
     });
 
     tbody.innerHTML = rows.map(function (e) {
-      var qn = Number(e.quality) || 3;
+      var qn = Number(e.experience) || 3;
       return "<tr>" +
         "<td>" + esc(e.pen) + "</td>" +
+        "<td class=\"nib\">" + (e.nib ? esc(e.nib) : "<span style=\"opacity:.5\">–</span>") + "</td>" +
         "<td>" + esc(e.ink) + "</td>" +
         "<td>" + esc(e.paper) + "</td>" +
-        "<td><span class=\"pill q" + qn + "\">" + QUALITY_WORDS[qn] + "</span></td>" +
-        "<td>" + (e.isDefault ? "<span class=\"badge-default\" title=\"Default go-to pairing\">★</span>" : "<span style=\"color:var(--muted)\" title=\"Experimental\">–</span>") + "</td>" +
+        "<td><span class=\"pill q" + qn + "\">" + EXP_WORDS[qn] + "</span></td>" +
         "<td class=\"comments\">" + esc(e.comments || "") + "</td>" +
         "<td class=\"row-actions\"><button class=\"icon-btn\" data-del=\"" + e.id + "\" title=\"Delete\">✕</button></td>" +
         "</tr>";
     }).join("");
 
-    var isEmpty = entries.length === 0;
-    $("emptyState").hidden = !isEmpty;
+    $("emptyState").hidden = entries.length !== 0;
     $("logCount").textContent = entries.length
       ? (rows.length === entries.length ? entries.length + " logged" : rows.length + " of " + entries.length + " shown")
       : "";
-
     updateArrows();
   }
 
   function updateArrows() {
-    var ths = document.querySelectorAll("thead th[data-sort]");
-    ths.forEach(function (th) {
+    document.querySelectorAll("thead th[data-sort]").forEach(function (th) {
       var arrow = th.querySelector(".arrow");
       if (th.getAttribute("data-sort") === sortKey) {
-        arrow.textContent = sortDir === 1 ? "▲" : "▼";
-        arrow.style.opacity = ".9";
+        arrow.textContent = sortDir === 1 ? "▲" : "▼"; arrow.style.opacity = ".9";
       } else { arrow.textContent = ""; }
     });
   }
@@ -442,7 +725,6 @@
       return;
     }
 
-    // Match entries for this pen+ink (either can be blank = wildcard)
     var matches = entries.filter(function (e) {
       var okPen = !pen || e.pen.toLowerCase() === pen;
       var okInk = !ink || e.ink.toLowerCase() === ink;
@@ -454,94 +736,106 @@
       return;
     }
 
-    // Aggregate by paper: average quality + count
     var byPaper = {};
     matches.forEach(function (e) {
-      var key = e.paper.trim();
+      var key = (e.paper || "").trim();
       if (!key) return;
       if (!byPaper[key]) byPaper[key] = { paper: key, sum: 0, n: 0 };
-      byPaper[key].sum += Number(e.quality) || 0;
+      byPaper[key].sum += Number(e.experience) || 0;
       byPaper[key].n += 1;
     });
 
     var ranked = Object.keys(byPaper).map(function (k) {
-      var r = byPaper[k];
-      r.avg = r.sum / r.n;
-      return r;
+      var r = byPaper[k]; r.avg = r.sum / r.n; return r;
     }).sort(function (a, b) {
-      if (b.avg !== a.avg) return b.avg - a.avg;   // higher quality first
-      return b.n - a.n;                            // more evidence breaks ties
+      if (b.avg !== a.avg) return b.avg - a.avg;
+      return b.n - a.n;
     });
 
     var label = [];
     if (pen) label.push($("recPen").value.trim());
     if (ink) label.push($("recInk").value.trim());
 
-    var html = "<div class=\"rec-note\">For <strong>" + esc(label.join(" + ")) + "</strong> — ranked by your average quality:</div>";
+    var html = "<div class=\"rec-note\">For <strong>" + esc(label.join(" + ")) + "</strong>, ranked by your average experience:</div>";
     html += ranked.map(function (r, i) {
-      var qn = Math.round(r.avg);
+      var qn = Math.max(1, Math.min(5, Math.round(r.avg)));
       var evidence = r.n === 1 ? "1 entry" : r.n + " entries";
       return "<div class=\"rec-line" + (i === 0 ? " top" : "") + "\">" +
         (i === 0 ? "<span>🏆</span>" : "<span style=\"color:var(--muted)\">#" + (i + 1) + "</span>") +
         "<span class=\"paper-name\">" + esc(r.paper) + "</span>" +
-        "<span class=\"pill q" + qn + "\">" + QUALITY_WORDS[qn] + "</span>" +
+        "<span class=\"pill q" + qn + "\">" + EXP_WORDS[qn] + "</span>" +
         "<span class=\"why\">avg " + r.avg.toFixed(1) + " / 5 · " + evidence + "</span>" +
         "</div>";
     }).join("");
-
     box.innerHTML = html;
   }
 
-  /* ---------- CSV export ---------- */
-  function exportCSV() {
-    if (!entries.length) { alert("Nothing to export yet."); return; }
-    var head = ["Pen", "Ink", "Paper", "Quality", "Default", "Comments"];
-    var lines = [head.map(csvCell).join(",")];
-    entries.forEach(function (e) {
-      lines.push([
-        e.pen, e.ink, e.paper,
-        QUALITY_WORDS[Number(e.quality) || 3],
-        e.isDefault ? "Default" : "Experimental",
-        e.comments || ""
-      ].map(csvCell).join(","));
-    });
-    var blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+  /* ---------- export / import ---------- */
+  function downloadBlob(content, filename, type) {
+    var blob = new Blob([content], { type: type });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
-    a.href = url;
-    a.download = "trinity-log.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+  function exportCSV() {
+    if (!entries.length) { alert("Nothing to export yet."); return; }
+    var head = ["Pen", "Nib", "Ink", "Paper", "Experience", "Comments"];
+    var lines = [head.map(csvCell).join(",")];
+    entries.forEach(function (e) {
+      lines.push([e.pen, e.nib, e.ink, e.paper, EXP_WORDS[Number(e.experience) || 3], e.comments || ""].map(csvCell).join(","));
+    });
+    downloadBlob(lines.join("\r\n"), "trinity-log.csv", "text/csv;charset=utf-8;");
   }
   function csvCell(v) {
     v = String(v == null ? "" : v);
     if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
     return v;
   }
+  function exportJSON() {
+    if (!entries.length) { alert("Nothing to back up yet."); return; }
+    var stamp = new Date().toISOString().slice(0, 10);
+    downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: entries }, null, 2),
+      "trinity-backup-" + stamp + ".json", "application/json");
+  }
+  function importJSON(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        var list = Array.isArray(data) ? data : (data && Array.isArray(data.entries) ? data.entries : null);
+        if (!list) { alert("That file does not look like a Trinity backup."); return; }
+        if (entries.length && !confirm("Import " + list.length + " entries? This replaces your current " + entries.length + " entries.")) return;
+        entries = list.map(function (e) {
+          return {
+            id: e.id || uid(), pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "",
+            experience: Number(e.experience != null ? e.experience : e.quality) || 3,
+            comments: e.comments || "", created: e.created || Date.now()
+          };
+        });
+        save(); refreshDatalists(); refreshNibFilter(); render();
+        alert("Imported " + entries.length + " entries.");
+      } catch (err) { alert("Could not read that file: " + err.message); }
+    };
+    reader.readAsText(file);
+  }
 
   /* ---------- events ---------- */
   $("addForm").addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var pen = $("pen").value.trim();
-    var ink = $("ink").value.trim();
-    var paper = $("paper").value.trim();
+    var pen = $("pen").value.trim(), ink = $("ink").value.trim(), paper = $("paper").value.trim();
     if (!pen || !ink || !paper) return;
     entries.push({
-      id: uid(),
-      pen: pen, ink: ink, paper: paper,
-      quality: Number($("quality").value) || 3,
-      isDefault: $("isDefault").checked,
-      comments: $("comments").value.trim(),
-      created: Date.now()
+      id: uid(), pen: pen, nib: readNib(), ink: ink, paper: paper,
+      experience: Number($("experience").value) || 3,
+      comments: $("comments").value.trim(), created: Date.now()
     });
     save();
-    // reset but keep the "default" checkbox checked (default by default)
     $("pen").value = ""; $("ink").value = ""; $("paper").value = "";
-    $("quality").value = "3"; $("comments").value = ""; $("isDefault").checked = true;
-    refreshDatalists();
-    render();
+    $("nib").value = ""; $("nibOther").value = ""; $("nibOtherWrap").hidden = true;
+    $("experience").value = "3"; $("comments").value = "";
+    refreshDatalists(); refreshNibFilter(); render();
     $("pen").focus();
   });
 
@@ -553,7 +847,7 @@
     var name = e ? (e.pen + " · " + e.ink + " · " + e.paper) : "this entry";
     if (confirm("Delete " + name + "?")) {
       entries = entries.filter(function (x) { return x.id !== id; });
-      save(); refreshDatalists(); render();
+      save(); refreshDatalists(); refreshNibFilter(); render();
     }
   });
 
@@ -561,28 +855,43 @@
     th.addEventListener("click", function () {
       var key = th.getAttribute("data-sort");
       if (sortKey === key) sortDir = -sortDir;
-      else { sortKey = key; sortDir = (key === "quality" || key === "isDefault") ? -1 : 1; }
+      else { sortKey = key; sortDir = (key === "experience") ? -1 : 1; }
       render();
     });
   });
 
   $("search").addEventListener("input", render);
-  $("filterQuality").addEventListener("change", render);
-  $("filterDefault").addEventListener("change", render);
+  $("filterExperience").addEventListener("change", render);
+  $("filterNib").addEventListener("change", render);
   $("recBtn").addEventListener("click", recommend);
   $("exportBtn").addEventListener("click", exportCSV);
+  $("exportJsonBtn").addEventListener("click", exportJSON);
+  $("importBtn").addEventListener("click", function () { $("importFile").click(); });
+  $("importFile").addEventListener("change", function (ev) {
+    if (ev.target.files && ev.target.files[0]) importJSON(ev.target.files[0]);
+    ev.target.value = "";
+  });
   $("clearAll").addEventListener("click", function (ev) {
     ev.preventDefault();
     if (!entries.length) return;
-    if (confirm("Delete ALL " + entries.length + " logged combinations? This can't be undone.")) {
-      entries = []; save(); refreshDatalists(); render();
+    if (confirm("Delete ALL " + entries.length + " logged combinations? This cannot be undone. Consider Backup first.")) {
+      entries = []; save(); refreshDatalists(); refreshNibFilter(); render();
     }
   });
 
   /* ---------- boot ---------- */
   initTheme();
+  initProfile();
+  initNibSelect();
   refreshDatalists();
+  refreshNibFilter();
   render();
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
 })();
 </script>
 </body>
