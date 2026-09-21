@@ -77,7 +77,10 @@
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
   }
-  .brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .brand { display: flex; align-items: center; gap: 9px; min-width: 0; background: none; border: none; padding: 4px 6px 4px 0; margin: 0; cursor: pointer; color: inherit; font: inherit; border-radius: 10px; }
+  .brand:hover .word { color: var(--accent); }
+  .brand:active { transform: scale(.97); }
+  .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .brand .logo { width: 26px; height: 32px; flex: none; color: var(--accent); }
   .brand .word { font-family: Georgia, serif; font-size: 22px; font-weight: 600; letter-spacing: .3px; }
   .header-right { display: flex; align-items: center; gap: 8px; flex: none; }
@@ -321,6 +324,12 @@
   /* lightbox */
   #lightbox { align-items: center; justify-content: center; padding: 20px; }
   #lightbox img { max-width: 100%; max-height: 88vh; border-radius: 12px; box-shadow: var(--shadow); }
+
+  /* app footer */
+  .app-footer { text-align: center; margin: 30px 0 8px; color: var(--muted); }
+  .app-footer .mwl { font-family: Georgia, serif; font-size: 13px; }
+  .app-footer .mwl .heart { color: var(--margin-red); }
+  .app-footer .mwl-flair { font-size: 12px; font-style: italic; margin-top: 3px; }
 </style>
 </head>
 <body>
@@ -367,10 +376,10 @@
 
 <!-- ===== top bar ===== -->
 <header class="topbar">
-  <div class="brand">
+  <button class="brand" id="homeBtn" type="button" title="Go to your log" aria-label="Trinity home">
     <svg class="logo"><use href="#i-nib"/></svg>
     <span class="word">Trinity</span>
-  </div>
+  </button>
   <div class="header-right">
     <button class="theme-btn" id="themeBtn" title="Toggle theme">◐</button>
     <div class="profile" id="profileChip" role="button" tabindex="0" title="Edit your profile">
@@ -522,6 +531,11 @@
 
     <div class="privacy-line">Everything stays in this browser. Nothing is uploaded. · <a href="#" id="clearAll">Clear all data</a></div>
   </section>
+
+  <footer class="app-footer">
+    <div class="mwl">Made with <span class="heart">&#9829;</span> for <span id="footerName">you</span></div>
+    <div class="mwl-flair" id="footerFlair" hidden></div>
+  </footer>
 </main>
 
 <datalist id="penList"></datalist>
@@ -800,6 +814,8 @@
     $("avatar").textContent = name ? name.charAt(0).toUpperCase() : "✒";
     $("profileName").textContent = name || "Set up profile";
     $("profileQuote").textContent = quote; $("profileQuote").style.display = quote ? "block" : "none";
+    $("footerName").textContent = name || "you";
+    var ff = $("footerFlair"); ff.textContent = quote; ff.hidden = !quote;
   }
   function openModal() {
     var p = getProfile() || {}; $("mName").value = p.name || ""; $("mQuote").value = p.quote || "";
@@ -1159,6 +1175,7 @@
 
   $("recBtn").addEventListener("click", recommend);
 
+  $("homeBtn").addEventListener("click", function () { showView("log"); });
   $("fab").addEventListener("click", function () { if (currentViewName === "inv") openInvSheet(); else openSheet(); });
   $("emptyAdd").addEventListener("click", openSheet);
   $("addClose").addEventListener("click", closeSheet);
