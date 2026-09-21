@@ -2,16 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Trinity · pen, ink, paper log</title>
-<meta name="description" content="An offline log for your fountain-pen combinations: pen, nib, ink, paper, and how they wrote. With a pairing recommender. Your data stays in your browser." />
+<meta name="description" content="An offline, mobile-first log for your fountain-pen combinations: pen, ink and paper, plus a pairing recommender. Your data stays in your browser." />
 <meta name="theme-color" content="#6b4f9e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Trinity" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%92%EF%B8%8F%3C/text%3E%3C/svg%3E" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <style>
   :root {
-    --bg: #f6f4ef;
+    --bg: #f4f1ea;
     --panel: #fffdf8;
     --ink: #2a2622;
     --muted: #7a7268;
@@ -19,41 +22,39 @@
     --line-strong: #d3cabb;
     --accent: #6b4f9e;
     --accent-soft: #ece5f6;
+    --rule: rgba(107,79,158,.07);
+    --margin-red: #c9776b;
     --good: #3f7d54;
     --bad: #b25b4a;
-    --shadow: 0 1px 2px rgba(40,34,28,.06), 0 8px 24px rgba(40,34,28,.06);
-    --radius: 12px;
+    --shadow: 0 1px 2px rgba(40,34,28,.06), 0 10px 30px rgba(40,34,28,.08);
+    --radius: 14px;
+    --nav-h: 62px;
   }
   :root:not([data-theme="light"]) {
     @media (prefers-color-scheme: dark) {
-      --bg: #17151a;
-      --panel: #201d24;
+      --bg: #16141a;
+      --panel: #201d25;
       --ink: #ece7f2;
       --muted: #a49bb0;
       --line: #322c3a;
       --line-strong: #423a4d;
       --accent: #b7a0e6;
       --accent-soft: #2b2437;
+      --rule: rgba(183,160,230,.06);
+      --margin-red: #b5675c;
       --good: #7ac48f;
       --bad: #e08f7f;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.4);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #17151a;
-    --panel: #201d24;
-    --ink: #ece7f2;
-    --muted: #a49bb0;
-    --line: #322c3a;
-    --line-strong: #423a4d;
-    --accent: #b7a0e6;
-    --accent-soft: #2b2437;
-    --good: #7ac48f;
-    --bad: #e08f7f;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --bg: #16141a; --panel: #201d25; --ink: #ece7f2; --muted: #a49bb0;
+    --line: #322c3a; --line-strong: #423a4d; --accent: #b7a0e6; --accent-soft: #2b2437;
+    --rule: rgba(183,160,230,.06); --margin-red: #b5675c; --good: #7ac48f; --bad: #e08f7f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.4);
   }
 
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   [hidden] { display: none !important; }
   html, body { margin: 0; }
   body {
@@ -62,369 +63,462 @@
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 80px; }
+  .serif { font-family: Georgia, "Times New Roman", serif; }
 
-  header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  h1 {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 30px; letter-spacing: .2px; margin: 0; font-weight: 600;
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px calc(12px);
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
   }
-  h1 .mark { color: var(--accent); }
-  .tagline { color: var(--muted); font-size: 14px; }
-
-  .header-right { display: flex; align-items: center; gap: 10px; }
+  .brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .brand .logo { width: 26px; height: 32px; flex: none; color: var(--accent); }
+  .brand .word { font-family: Georgia, serif; font-size: 22px; font-weight: 600; letter-spacing: .3px; }
+  .header-right { display: flex; align-items: center; gap: 8px; flex: none; }
   .theme-btn {
     border: 1px solid var(--line-strong); background: var(--panel); color: var(--muted);
-    border-radius: 999px; padding: 8px 12px; font-size: 13px; cursor: pointer; white-space: nowrap;
+    border-radius: 999px; width: 38px; height: 38px; font-size: 15px; cursor: pointer; flex: none;
   }
-  .theme-btn:hover { color: var(--ink); }
-
-  /* Profile chip */
+  .theme-btn:active { transform: scale(.94); }
   .profile {
-    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 9px; cursor: pointer; flex: none;
     border: 1px solid var(--line-strong); background: var(--panel);
-    border-radius: 999px; padding: 6px 14px 6px 6px; max-width: 260px;
+    border-radius: 999px; padding: 4px 12px 4px 4px; max-width: 200px;
   }
-  .profile:hover { border-color: var(--accent); }
+  .profile:active { transform: scale(.98); }
   .avatar {
-    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    width: 32px; height: 32px; border-radius: 50%; flex: none;
     display: flex; align-items: center; justify-content: center;
-    background: var(--accent); color: #fff; font-weight: 700; font-size: 15px;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
   }
   .profile-text { min-width: 0; }
-  .profile-name { font-size: 14px; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .profile-quote { font-size: 12px; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-name { font-size: 13px; font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-quote { font-size: 11px; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 460px) {
+    .profile-text { display: none; }
+    .profile { padding: 4px; }
+  }
 
-  .card {
-    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: 18px; margin-top: 20px;
-  }
-  .card h2 {
-    font-family: Georgia, serif; font-size: 17px; margin: 0 0 14px; font-weight: 600;
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  }
-  .card h2 .count { color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; }
+  /* ---------- layout ---------- */
+  .app { max-width: 780px; margin: 0 auto; padding: 16px; }
+  .view { animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-  /* Add form */
-  .addform { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; align-items: end; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  .field.pen { grid-column: span 4; }
-  .field.nib { grid-column: span 3; }
-  .field.ink { grid-column: span 5; }
-  .field.paper { grid-column: span 5; }
-  .field.experience { grid-column: span 3; }
-  .field.submit { grid-column: span 4; }
-  .field.comments { grid-column: span 12; }
-  .field.nibother { grid-column: span 12; }
-  label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
-  input[type="text"], select, textarea {
-    background: var(--bg); color: var(--ink); border: 1px solid var(--line-strong);
-    border-radius: 9px; padding: 9px 11px; font-size: 14px; font-family: inherit; width: 100%;
+  .view-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 2px 14px; }
+  .view-title { font-family: Georgia, serif; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+  .view-title .drop { width: 15px; height: 19px; color: var(--accent); flex: none; }
+  .view-sub { color: var(--muted); font-size: 13px; margin: -8px 2px 16px; }
+
+  .kebab { border: 1px solid var(--line-strong); background: var(--panel); color: var(--muted); border-radius: 10px; width: 38px; height: 38px; font-size: 18px; cursor: pointer; flex: none; }
+  .kebab:active { transform: scale(.95); }
+
+  /* ---------- toolbar ---------- */
+  .toolbar { display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px; }
+  .toolbar .row { display: flex; gap: 8px; }
+  .toolbar .row > * { flex: 1; min-width: 0; }
+  input[type="text"], input[type="search"], select, textarea {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line-strong);
+    border-radius: 11px; padding: 11px 13px; font-size: 16px; font-family: inherit; width: 100%;
   }
-  textarea { resize: vertical; min-height: 40px; }
+  select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: right 15px center, right 10px center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 30px; }
+  textarea { resize: vertical; min-height: 46px; }
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  label .hint { text-transform: none; letter-spacing: 0; font-weight: 400; font-style: italic; }
 
-  .btn {
-    background: var(--accent); color: #fff; border: none; border-radius: 9px;
-    padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
-  }
-  .btn:hover { filter: brightness(1.05); }
+  /* ---------- buttons ---------- */
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 11px; padding: 13px 18px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn:active { transform: scale(.98); filter: brightness(1.05); }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line-strong); }
-  .btn.ghost:hover { background: var(--accent-soft); }
-  .btn.tiny { padding: 6px 12px; font-size: 12px; }
+  .btn.block { width: 100%; }
+  .btn.tiny { padding: 8px 12px; font-size: 13px; border-radius: 9px; }
 
-  /* Toolbar */
-  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-  .toolbar input[type="text"] { max-width: 230px; }
-  .toolbar select { max-width: 180px; }
-  .spacer { flex: 1; }
-
-  /* Table */
-  .table-scroll { overflow-x: auto; margin: 0 -6px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 760px; }
-  thead th {
-    text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
-    color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--line-strong);
-    white-space: nowrap; cursor: pointer; user-select: none;
+  /* ---------- entry cards ---------- */
+  .cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 620px) { .cards { grid-template-columns: 1fr 1fr; } }
+  .card {
+    position: relative; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 14px 20px; overflow: hidden;
   }
-  thead th.nosort { cursor: default; }
-  thead th .arrow { opacity: .4; font-size: 10px; }
-  tbody td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  tbody tr:hover { background: var(--accent-soft); }
-  td.comments { color: var(--muted); max-width: 240px; }
-  td.nib { white-space: nowrap; color: var(--muted); }
-  .pill {
-    display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
-  }
+  .card::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 1.5px; background: var(--margin-red); opacity: .5; }
+  .card .pen { font-weight: 700; font-size: 16px; line-height: 1.25; display: flex; align-items: center; gap: 7px; }
+  .card .pen .nibmark { width: 12px; height: 15px; color: var(--accent); flex: none; opacity: .8; }
+  .card .nibsub { font-size: 12px; color: var(--muted); margin: 1px 0 8px 19px; font-style: italic; }
+  .card .nibsub.empty { display: none; }
+  .card .combo { font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 9px; }
+  .card .combo .lbl { color: var(--muted); }
+  .card .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card .comment { font-size: 13px; color: var(--muted); margin-top: 9px; line-height: 1.4; }
+  .card .thumb { margin-top: 10px; }
+  .card .thumb img { width: 100%; max-height: 150px; object-fit: cover; border-radius: 9px; border: 1px solid var(--line); cursor: pointer; display: block; }
+  .card .del { position: absolute; top: 10px; right: 10px; background: transparent; border: 1px solid var(--line); border-radius: 8px; width: 30px; height: 30px; color: var(--muted); cursor: pointer; font-size: 13px; }
+  .card .del:active { color: var(--bad); border-color: var(--bad); }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
   .q1 { background: #f2d9d3; color: #8f3f2e; }
   .q2 { background: #f6e6cf; color: #8a5a1e; }
   .q3 { background: #eee9d8; color: #6d6338; }
   .q4 { background: #d9ecdb; color: #2f6a44; }
   .q5 { background: #cfe6e9; color: #216068; }
-  .row-actions { white-space: nowrap; text-align: right; }
-  .icon-btn {
-    background: transparent; border: 1px solid var(--line); border-radius: 7px; cursor: pointer;
-    padding: 4px 8px; font-size: 13px; color: var(--muted);
-  }
-  .icon-btn:hover { color: var(--bad); border-color: var(--bad); }
-  .empty { text-align: center; color: var(--muted); padding: 34px 10px; font-style: italic; }
 
-  /* Recommender */
-  .rec-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
-  .rec-result { margin-top: 14px; }
-  .rec-line { padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .rec-line.top { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, transparent); }
-  .rec-line .paper-name { font-weight: 600; }
+  /* ---------- empty state (ruled paper) ---------- */
+  .empty {
+    text-align: center; padding: 30px 20px; border-radius: var(--radius);
+    border: 1px solid var(--line); background:
+      linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 100% 30px,
+      var(--panel);
+    position: relative; overflow: hidden;
+  }
+  .empty::before { content: ""; position: absolute; left: 26px; top: 0; bottom: 0; width: 2px; background: var(--margin-red); opacity: .4; }
+  .empty .motif { width: 128px; height: 112px; margin: 4px auto 14px; display: block; }
+  .empty h3 { font-family: Georgia, serif; margin: 0 0 6px; font-size: 18px; }
+  .empty p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+  /* ---------- recommender ---------- */
+  .rec-motif { width: 100%; max-width: 300px; height: 190px; display: block; margin: 0 auto 6px; }
+  .rec-form { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 6px; }
+  .rec-result { margin-top: 16px; }
+  .rec-line { padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; margin-top: 9px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--panel); }
+  .rec-line.top { border-color: var(--good); background: color-mix(in srgb, var(--good) 9%, var(--panel)); }
+  .rec-line .rank { font-weight: 700; color: var(--muted); }
+  .rec-line .paper-name { font-weight: 700; }
   .rec-line .why { color: var(--muted); font-size: 13px; }
-  .rec-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .rec-note { color: var(--muted); font-size: 14px; margin-top: 8px; }
 
-  /* FAQ */
-  details.faq { border: 1px solid var(--line); border-radius: 9px; padding: 0 14px; margin-top: 10px; background: var(--bg); }
+  /* ---------- FAQ ---------- */
+  details.faq { border: 1px solid var(--line); border-radius: 11px; padding: 0 15px; margin-top: 10px; background: var(--panel); }
   details.faq[open] { padding-bottom: 14px; }
-  details.faq summary {
-    cursor: pointer; padding: 12px 0; font-weight: 600; font-size: 14px; list-style: none;
-    display: flex; align-items: center; gap: 8px;
-  }
+  details.faq summary { cursor: pointer; padding: 14px 0; font-weight: 600; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 8px; }
   details.faq summary::-webkit-details-marker { display: none; }
-  details.faq summary::before { content: "+"; color: var(--accent); font-weight: 700; font-size: 16px; width: 14px; }
+  details.faq summary::before { content: "+"; color: var(--accent); font-weight: 700; font-size: 18px; width: 15px; }
   details.faq[open] summary::before { content: "\2212"; }
-  details.faq .faq-body { color: var(--muted); font-size: 14px; padding-bottom: 2px; }
+  details.faq .faq-body { color: var(--muted); font-size: 14px; }
   details.faq .faq-body code { background: var(--accent-soft); color: var(--accent); padding: 1px 5px; border-radius: 5px; font-size: 13px; }
   details.faq .faq-body ol, details.faq .faq-body ul { margin: 6px 0; padding-left: 20px; }
-  details.faq .faq-body li { margin: 4px 0; }
-  .geek-head { margin: 22px 0 4px; font-family: Georgia, serif; font-size: 15px; font-weight: 600; color: var(--ink); }
-  .geek-head .sub { color: var(--muted); font-weight: 400; font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  details.faq .faq-body li { margin: 5px 0; }
+  .geek-head { margin: 24px 0 6px; font-family: Georgia, serif; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .geek-head .nibmark { width: 14px; height: 17px; color: var(--accent); }
+  .privacy-line { text-align: center; color: var(--muted); font-size: 12px; margin: 22px 0 4px; }
+  .privacy-line a { color: var(--accent); }
 
-  /* Modal */
-  .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(20,16,24,.5); backdrop-filter: blur(2px);
-    display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+  /* ---------- FAB ---------- */
+  .fab {
+    position: fixed; right: 18px; z-index: 25;
+    bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px));
+    width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--accent); color: #fff; box-shadow: 0 6px 18px rgba(107,79,158,.45);
+    display: flex; align-items: center; justify-content: center;
   }
-  .modal {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
-    box-shadow: var(--shadow); padding: 22px; width: 100%; max-width: 420px;
-  }
-  .modal h3 { font-family: Georgia, serif; margin: 0 0 4px; font-size: 20px; }
-  .modal-sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
-  .modal label { display: block; margin: 12px 0 5px; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .fab svg { width: 26px; height: 26px; }
+  .fab:active { transform: scale(.93); }
 
-  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; line-height: 1.9; }
-  footer a { color: var(--accent); }
-
-  @media (max-width: 720px) {
-    .addform { grid-template-columns: repeat(2, 1fr); }
-    .field.pen, .field.nib, .field.ink, .field.paper, .field.experience, .field.submit { grid-column: span 1; }
-    .field.comments, .field.nibother { grid-column: span 2; }
-    .rec-form { grid-template-columns: 1fr; }
-    .profile { max-width: 190px; }
+  /* ---------- bottom nav ---------- */
+  .bottomnav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex; background: var(--panel); border-top: 1px solid var(--line);
   }
+  .bottomnav button {
+    flex: 1; background: none; border: none; cursor: pointer; color: var(--muted);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 11px; font-weight: 600; padding: 6px 0;
+  }
+  .bottomnav button svg { width: 23px; height: 23px; }
+  .bottomnav button.active { color: var(--accent); }
+  .bottomnav button.active svg { transform: translateY(-1px); }
+
+  /* ---------- sheets / modals ---------- */
+  .backdrop { position: fixed; inset: 0; background: rgba(20,16,24,.5); backdrop-filter: blur(2px); z-index: 40; display: flex; }
+  .sheet-wrap { align-items: flex-end; justify-content: center; }
+  @media (min-width: 620px) { .sheet-wrap { align-items: center; } }
+  .sheet {
+    background: var(--panel); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
+    border-radius: 18px 18px 0 0; box-shadow: var(--shadow);
+    padding: 8px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+    animation: slideup .22s ease;
+  }
+  @media (min-width: 620px) { .sheet { border-radius: 18px; } }
+  @keyframes slideup { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
+  .grabber { width: 40px; height: 4px; background: var(--line-strong); border-radius: 3px; margin: 6px auto 12px; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .sheet-head h2 { font-family: Georgia, serif; font-size: 19px; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .sheet-head h2 .nibmark { width: 15px; height: 18px; color: var(--accent); }
+  .x-btn { background: transparent; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 4px 8px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .pengroup {
+    grid-column: 1 / -1; position: relative; border: 1px dashed var(--line-strong);
+    border-radius: 12px; padding: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
+  }
+  .pengroup .pgtag { grid-column: 1 / -1; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: -2px; }
+  .pengroup .pgtag .nibmark { width: 12px; height: 15px; }
+  @media (max-width: 420px) { .pengroup { grid-template-columns: 1fr; } }
+
+  .photo-row { grid-column: 1 / -1; }
+  .photo-actions { display: flex; align-items: center; gap: 10px; }
+  .photo-preview { position: relative; margin-top: 10px; }
+  .photo-preview img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 11px; border: 1px solid var(--line); display: block; }
+  .photo-preview .rm { position: absolute; top: 8px; right: 8px; background: rgba(20,16,24,.6); color: #fff; border: none; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; }
+
+  .modal { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow); padding: 22px; width: 100%; max-width: 400px; margin: auto; }
+  .modal h3 { font-family: Georgia, serif; margin: 0 0 4px; font-size: 20px; display: flex; align-items: center; gap: 8px; }
+  .modal h3 .logo { width: 20px; height: 25px; color: var(--accent); }
+  .modal-sub { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+  /* data menu popover */
+  .menu-pop { position: fixed; z-index: 45; background: var(--panel); border: 1px solid var(--line-strong); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; min-width: 190px; }
+  .menu-pop button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; padding: 11px 12px; font-size: 14px; color: var(--ink); cursor: pointer; border-radius: 8px; font-family: inherit; }
+  .menu-pop button:active { background: var(--accent-soft); }
+  .menu-pop button.danger { color: var(--bad); }
+  .menu-pop .sep { height: 1px; background: var(--line); margin: 4px 6px; }
+
+  /* lightbox */
+  #lightbox { align-items: center; justify-content: center; padding: 20px; }
+  #lightbox img { max-width: 100%; max-height: 88vh; border-radius: 12px; box-shadow: var(--shadow); }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <h1><span class="mark">✒</span> Trinity</h1>
-      <span class="tagline">your log of what pen, nib, ink and paper write well together</span>
-    </div>
-    <div class="header-right">
-      <div class="profile" id="profileChip" role="button" tabindex="0" title="Edit your profile">
-        <div class="avatar" id="avatar">✒</div>
-        <div class="profile-text">
-          <div class="profile-name" id="profileName">Set up profile</div>
-          <div class="profile-quote" id="profileQuote"></div>
-        </div>
-      </div>
-      <button class="theme-btn" id="themeBtn" title="Toggle theme">◐</button>
-    </div>
-  </header>
 
-  <!-- Add a combination -->
-  <section class="card">
-    <h2>Add a combination</h2>
-    <form class="addform" id="addForm" autocomplete="off">
-      <div class="field pen">
-        <label for="pen">Pen</label>
-        <input type="text" id="pen" list="penList" placeholder="Type any pen, e.g. Ranga Model 3" required />
+<!-- ===== SVG defs (reusable motifs) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-nib" viewBox="0 0 40 52">
+      <path d="M20 1 C11 5 6 15 8 30 L20 51 L32 30 C34 15 29 5 20 1 Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+      <line x1="20" y1="26" x2="20" y2="51" stroke="currentColor" stroke-width="2.4"/>
+      <circle cx="20" cy="23" r="3.1" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    </symbol>
+    <symbol id="i-drop" viewBox="0 0 24 30">
+      <path d="M12 1 C12 1 3 13 3 20 A9 9 0 0 0 21 20 C21 13 12 1 12 1 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-log" viewBox="0 0 24 24">
+      <rect x="4" y="3" width="16" height="18" rx="2.2" fill="none" stroke="currentColor" stroke-width="2"/>
+      <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="8" y1="16" x2="13" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-tri" viewBox="0 0 24 24">
+      <path d="M12 3 L21 20 L3 20 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="3" r="2.3" fill="currentColor"/>
+      <circle cx="21" cy="20" r="2.3" fill="currentColor"/>
+      <circle cx="3" cy="20" r="2.3" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-faq" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M9.2 9.3 A2.8 2.8 0 1 1 12.6 12.2 C12.1 12.5 12 13 12 13.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="16.6" r="1.15" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ===== top bar ===== -->
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo"><use href="#i-nib"/></svg>
+    <span class="word">Trinity</span>
+  </div>
+  <div class="header-right">
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">◐</button>
+    <div class="profile" id="profileChip" role="button" tabindex="0" title="Edit your profile">
+      <div class="avatar" id="avatar">✒</div>
+      <div class="profile-text">
+        <div class="profile-name" id="profileName">Set up profile</div>
+        <div class="profile-quote" id="profileQuote"></div>
       </div>
-      <div class="field nib">
-        <label for="nib">Nib</label>
-        <select id="nib"></select>
-      </div>
-      <div class="field ink">
-        <label for="ink">Ink</label>
-        <input type="text" id="ink" list="inkList" placeholder="Type any ink, e.g. Krishna Sea at Night" required />
-      </div>
-      <div class="field nibother" id="nibOtherWrap" hidden>
-        <label for="nibOther">Your nib</label>
-        <input type="text" id="nibOther" placeholder="Describe your special nib" />
-      </div>
-      <div class="field paper">
-        <label for="paper">Paper</label>
-        <input type="text" id="paper" list="paperList" placeholder="Type any paper, e.g. JK Paper 100gsm" required />
-      </div>
-      <div class="field experience">
-        <label for="experience">Experience</label>
-        <select id="experience">
-          <option value="1">Poor</option>
-          <option value="2">Fair</option>
-          <option value="3" selected>Good</option>
-          <option value="4">Great</option>
-          <option value="5">Excellent</option>
+    </div>
+  </div>
+</header>
+
+<main class="app">
+  <!-- ===== LOG VIEW ===== -->
+  <section class="view" id="viewLog">
+    <div class="view-head">
+      <div class="view-title serif"><svg class="drop"><use href="#i-drop"/></svg> Your log <span class="count" id="logCount" style="font-size:13px;color:var(--muted);font-weight:400"></span></div>
+      <button class="kebab" id="dataBtn" title="Data options">⋯</button>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Search pen, nib, ink, paper, notes…" />
+      <div class="row">
+        <select id="sortBy" aria-label="Sort">
+          <option value="recent">Newest first</option>
+          <option value="exp_desc">Best experience</option>
+          <option value="exp_asc">Worst experience</option>
+          <option value="pen">Pen A to Z</option>
         </select>
+        <select id="filterExperience" aria-label="Filter by experience">
+          <option value="">All experiences</option>
+          <option value="5">Excellent</option>
+          <option value="4">Great</option>
+          <option value="3">Good</option>
+          <option value="2">Fair</option>
+          <option value="1">Poor</option>
+        </select>
+        <select id="filterNib" aria-label="Filter by nib"><option value="">All nibs</option></select>
       </div>
-      <div class="field submit">
-        <label>&nbsp;</label>
-        <button class="btn" type="submit">Add to log</button>
-      </div>
-      <div class="field comments">
-        <label for="comments">Comments</label>
-        <textarea id="comments" placeholder="Feathering? Dry time? Sheen? How it felt…"></textarea>
-      </div>
-    </form>
-    <datalist id="penList"></datalist>
-    <datalist id="inkList"></datalist>
-    <datalist id="paperList"></datalist>
+    </div>
+    <div class="cards" id="logList"></div>
+    <div class="empty" id="emptyState" hidden>
+      <svg class="motif" viewBox="0 0 200 175" aria-hidden="true">
+        <path d="M100 18 L178 156 L22 156 Z" fill="none" stroke="var(--line-strong)" stroke-width="2" stroke-linejoin="round"/>
+        <g fill="var(--accent)">
+          <circle cx="100" cy="18" r="6"/><circle cx="178" cy="156" r="6"/><circle cx="22" cy="156" r="6"/>
+        </g>
+        <text x="100" y="10" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Pen</text>
+        <text x="12" y="172" text-anchor="start" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Ink</text>
+        <text x="188" y="172" text-anchor="end" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Paper</text>
+        <use href="#i-nib" x="88" y="60" width="24" height="32" style="color:var(--accent)"/>
+      </svg>
+      <h3 class="serif">Your trinity awaits</h3>
+      <p>Log your first pen, ink and paper combination. Tap the + button to begin.</p>
+      <button class="btn" id="emptyAdd">Add a combination</button>
+    </div>
   </section>
 
-  <!-- Recommender -->
-  <section class="card">
-    <h2>✨ Pairing recommender <span class="count">best paper for a pen + ink, from your ratings</span></h2>
+  <!-- ===== RECOMMENDER VIEW ===== -->
+  <section class="view" id="viewRec" hidden>
+    <div class="view-head"><div class="view-title serif"><svg class="drop"><use href="#i-drop"/></svg> Pairing recommender</div></div>
+    <p class="view-sub">Pick a pen and an ink you have logged. Trinity finds the paper that scored best.</p>
+    <svg class="rec-motif" viewBox="0 0 300 190" aria-hidden="true">
+      <path d="M150 22 L268 168 L32 168 Z" fill="none" stroke="var(--line-strong)" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="150" cy="22" r="7" fill="var(--accent)"/>
+      <circle cx="32" cy="168" r="7" fill="var(--accent)"/>
+      <circle id="paperNode" cx="268" cy="168" r="7" fill="var(--line-strong)"/>
+      <text x="150" y="14" text-anchor="middle" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Pen</text>
+      <text x="20" y="184" text-anchor="start" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Ink</text>
+      <text x="280" y="184" text-anchor="end" font-family="Georgia,serif" font-size="14" fill="var(--muted)">Paper?</text>
+    </svg>
     <div class="rec-form">
-      <div class="field">
-        <label for="recPen">Pen</label>
-        <input type="text" id="recPen" list="penList" placeholder="Pick a pen you've logged" />
-      </div>
-      <div class="field">
-        <label for="recInk">Ink</label>
-        <input type="text" id="recInk" list="inkList" placeholder="Pick an ink you've logged" />
-      </div>
-      <div class="field">
-        <label>&nbsp;</label>
-        <button class="btn ghost" id="recBtn" type="button">Recommend</button>
-      </div>
+      <div><label for="recPen">Pen</label><input type="text" id="recPen" list="penList" placeholder="Pick a pen you've logged" /></div>
+      <div><label for="recInk">Ink</label><input type="text" id="recInk" list="inkList" placeholder="Pick an ink you've logged" /></div>
+      <button class="btn block" id="recBtn" type="button">Recommend a paper</button>
     </div>
     <div class="rec-result" id="recResult"></div>
   </section>
 
-  <!-- The log -->
-  <section class="card">
-    <h2>Your log <span class="count" id="logCount"></span></h2>
-    <div class="toolbar">
-      <input type="text" id="search" placeholder="Search pen, nib, ink, paper, comments…" />
-      <select id="filterExperience">
-        <option value="">All experiences</option>
-        <option value="5">Excellent</option>
-        <option value="4">Great</option>
-        <option value="3">Good</option>
-        <option value="2">Fair</option>
-        <option value="1">Poor</option>
-      </select>
-      <select id="filterNib"><option value="">All nibs</option></select>
-      <span class="spacer"></span>
-      <button class="btn ghost tiny" id="importBtn" type="button">Import</button>
-      <button class="btn ghost tiny" id="exportJsonBtn" type="button">Backup</button>
-      <button class="btn ghost tiny" id="exportBtn" type="button">Export CSV</button>
-      <input type="file" id="importFile" accept="application/json,.json" hidden />
-    </div>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th data-sort="pen">Pen <span class="arrow"></span></th>
-            <th data-sort="nib">Nib <span class="arrow"></span></th>
-            <th data-sort="ink">Ink <span class="arrow"></span></th>
-            <th data-sort="paper">Paper <span class="arrow"></span></th>
-            <th data-sort="experience">Experience <span class="arrow"></span></th>
-            <th class="nosort">Comments</th>
-            <th class="nosort"></th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div class="empty" id="emptyState" hidden>Nothing logged yet. Add your first combination above.</div>
+  <!-- ===== FAQ VIEW ===== -->
+  <section class="view" id="viewFaq" hidden>
+    <div class="view-head"><div class="view-title serif"><svg class="drop"><use href="#i-drop"/></svg> FAQ</div></div>
+
+    <details class="faq"><summary>What is Trinity?</summary><div class="faq-body">A log for your fountain-pen combinations. Its heart is the trinity of <strong>pen, ink and paper</strong>. Record each combination, rate the experience and add notes, and over time it becomes your personal reference for what writes well together.</div></details>
+    <details class="faq"><summary>Why pen, ink and paper, and not the nib?</summary><div class="faq-body">The nib matters a great deal, but it usually lives and dies with its pen and is rarely swapped. So the three pillars stay pen, ink and paper, and the nib rides along as a detail of the pen.</div></details>
+    <details class="faq"><summary>Is my data private?</summary><div class="faq-body">Yes. Everything is saved only in this browser on this device. Nothing is uploaded, and there is no account or server.</div></details>
+    <details class="faq"><summary>How do I back up or move my data?</summary><div class="faq-body">Open the <strong>⋯</strong> menu on the log. <strong>Backup</strong> saves a file with all your entries and photos. <strong>Import</strong> loads it back on another device. <strong>Export CSV</strong> gives a spreadsheet copy of the text.</div></details>
+    <details class="faq"><summary>Can I install it like an app?</summary><div class="faq-body">Yes. Trinity is a PWA. Use your browser's <strong>Install app</strong> or <strong>Add to Home Screen</strong> option. It then opens in its own window and works offline.</div></details>
+    <details class="faq"><summary>My pen or ink is from a small maker. Will it work?</summary><div class="faq-body">Just type the full name. The suggestions only save keystrokes for common brands. Anything you type is accepted and remembered for next time.</div></details>
+    <details class="faq"><summary>How do I add a photo?</summary><div class="faq-body">In the add sheet, tap <strong>Add photo</strong>. On a phone this can open the camera. The image is shrunk on your device before it is saved, so it stays small.</div></details>
+
+    <div class="geek-head"><svg class="nibmark"><use href="#i-nib"/></svg> For the geeks</div>
+
+    <details class="faq"><summary>How does the pairing recommender work?</summary><div class="faq-body">
+      It turns your own ratings into a ranking. Given a pen and an ink:
+      <ol>
+        <li>It filters your log to matching entries. Either field can be left blank, which acts as a wildcard.</li>
+        <li>It groups the matches by paper.</li>
+        <li>Each experience becomes a number: <code>Poor 1</code>, <code>Fair 2</code>, <code>Good 3</code>, <code>Great 4</code>, <code>Excellent 5</code>, and it averages them per paper.</li>
+        <li>It ranks papers by that average, highest first. Ties go to the paper with more entries, since that is stronger evidence.</li>
+        <li>The pill is the average rounded to the nearest word, and the line shows the exact average and the entry count.</li>
+      </ol>
+      Nibs are pooled, since they belong to the pen. The more you log, the sharper it gets.
+    </div></details>
+    <details class="faq"><summary>Where is my data stored?</summary><div class="faq-body">Entries live in <code>localStorage</code> under <code>trinity.entries.v1</code> as a JSON array, with photos held as small compressed data inside each entry. Profile and theme are stored the same way. Backup exports that JSON, and Import replaces the current entries with it.</div></details>
+    <details class="faq"><summary>How do offline and install work?</summary><div class="faq-body">A service worker caches the app on first load, so Trinity opens with no connection. A new version is fetched in the background and applies on your next visit.</div></details>
+
+    <div class="privacy-line">Everything stays in this browser. Nothing is uploaded. · <a href="#" id="clearAll">Clear all data</a></div>
   </section>
+</main>
 
-  <!-- FAQ -->
-  <section class="card">
-    <h2>FAQ</h2>
+<datalist id="penList"></datalist>
+<datalist id="inkList"></datalist>
+<datalist id="paperList"></datalist>
 
-    <details class="faq">
-      <summary>What is Trinity?</summary>
-      <div class="faq-body">A simple log for your fountain-pen combinations. Record the pen, nib, ink, and paper, rate the experience, and add notes. Over time it becomes your personal reference for what writes well together.</div>
-    </details>
+<!-- FAB -->
+<button class="fab" id="fab" title="Add a combination"><svg><use href="#i-plus"/></svg></button>
 
-    <details class="faq">
-      <summary>Is my data private?</summary>
-      <div class="faq-body">Yes. Everything is saved only in this browser on this device. Nothing is uploaded, and there is no account or server.</div>
-    </details>
+<!-- bottom nav -->
+<nav class="bottomnav">
+  <button data-view="log" class="active"><svg><use href="#i-log"/></svg>Log</button>
+  <button data-view="rec"><svg><use href="#i-tri"/></svg>Recommender</button>
+  <button data-view="faq"><svg><use href="#i-faq"/></svg>FAQ</button>
+</nav>
 
-    <details class="faq">
-      <summary>How do I back up or move my data?</summary>
-      <div class="faq-body">Use <strong>Backup</strong> to save a small file with all your entries. Use <strong>Import</strong> on another device or browser to load it back in. <strong>Export CSV</strong> gives you a spreadsheet-friendly copy.</div>
-    </details>
-
-    <details class="faq">
-      <summary>Can I install it like an app?</summary>
-      <div class="faq-body">Yes. Trinity is a PWA. Use your browser's <strong>Install app</strong> or <strong>Add to Home Screen</strong> option. After that it opens in its own window and works offline.</div>
-    </details>
-
-    <details class="faq">
-      <summary>My pen or ink is from a small maker and is not in the list. What do I do?</summary>
-      <div class="faq-body">Just type the full name. The suggestions are only there to save keystrokes for common brands. Any text you type is accepted and remembered for next time.</div>
-    </details>
-
-    <details class="faq">
-      <summary>How do I add an unusual nib?</summary>
-      <div class="faq-body">Pick <code>Other</code> at the bottom of the nib list and a box appears where you can describe it, for example an architect grind or a custom cursive italic.</div>
-    </details>
-
-    <div class="geek-head">For the geeks <span class="sub">how it works under the hood</span></div>
-
-    <details class="faq">
-      <summary>How does the pairing recommender work?</summary>
-      <div class="faq-body">
-        It turns your own ratings into a ranking. Given a pen and/or ink:
-        <ol>
-          <li>It filters your log to entries that match. Either field can be left blank, which acts as a wildcard, so you can ask "best paper for this ink, any pen".</li>
-          <li>It groups the matches by paper.</li>
-          <li>Each experience becomes a number: <code>Poor 1</code>, <code>Fair 2</code>, <code>Good 3</code>, <code>Great 4</code>, <code>Excellent 5</code>. It averages those per paper.</li>
-          <li>It ranks papers by that average, highest first. When two papers tie, the one with more entries wins, since more entries means stronger evidence.</li>
-          <li>The pill you see is the average rounded to the nearest word, and the line shows the exact average and how many entries back it.</li>
-        </ol>
-        The nib is recorded but not part of the key, so all nibs for that pen and ink are pooled together. It only ever uses your data, so the more you log, the sharper it gets.
+<!-- ===== Add sheet ===== -->
+<div class="backdrop sheet-wrap" id="addSheet" hidden>
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="sheet-head">
+      <h2 class="serif"><svg class="nibmark"><use href="#i-nib"/></svg> Add a combination</h2>
+      <button class="x-btn" id="addClose" title="Close">×</button>
+    </div>
+    <form id="addForm" autocomplete="off">
+      <div class="form-grid">
+        <div class="pengroup">
+          <div class="pgtag"><svg class="nibmark"><use href="#i-nib"/></svg> The pen</div>
+          <div><label for="pen">Pen</label><input type="text" id="pen" list="penList" placeholder="e.g. Ranga Model 3" required /></div>
+          <div><label for="nib">Nib <span class="hint">(part of this pen)</span></label>
+            <select id="nib"></select>
+          </div>
+          <div class="full nibother" id="nibOtherWrap" hidden><label for="nibOther">Your nib</label><input type="text" id="nibOther" placeholder="Describe your special nib" /></div>
+        </div>
+        <div class="full"><label for="ink">Ink</label><input type="text" id="ink" list="inkList" placeholder="e.g. Krishna Sea at Night" required /></div>
+        <div class="full"><label for="paper">Paper</label><input type="text" id="paper" list="paperList" placeholder="e.g. JK Paper 100gsm" required /></div>
+        <div><label for="experience">Experience</label>
+          <select id="experience">
+            <option value="1">Poor</option><option value="2">Fair</option>
+            <option value="3" selected>Good</option><option value="4">Great</option><option value="5">Excellent</option>
+          </select>
+        </div>
+        <div class="photo-row">
+          <label>Writing sample <span class="hint">(optional)</span></label>
+          <div class="photo-actions">
+            <input type="file" id="photoInput" accept="image/*" capture="environment" hidden />
+            <button type="button" class="btn ghost tiny" id="photoBtn">📷 Add photo</button>
+            <span id="photoStatus" style="font-size:13px;color:var(--muted)"></span>
+          </div>
+          <div class="photo-preview" id="photoPreview" hidden>
+            <img id="photoImg" alt="Writing sample preview" />
+            <button type="button" class="rm" id="photoRemove" title="Remove">×</button>
+          </div>
+        </div>
+        <div class="full"><label for="comments">Notes</label><textarea id="comments" placeholder="Feathering? Dry time? Sheen? How it felt…"></textarea></div>
+        <button class="btn block full" type="submit">Add to log</button>
       </div>
-    </details>
-
-    <details class="faq">
-      <summary>Where and how is my data stored?</summary>
-      <div class="faq-body">Entries live in your browser's <code>localStorage</code> under the key <code>trinity.entries.v1</code>, as a JSON array. Your profile and theme are stored the same way. Backup exports that JSON to a file, and Import reads it back and replaces the current entries.</div>
-    </details>
-
-    <details class="faq">
-      <summary>How does offline and install work?</summary>
-      <div class="faq-body">A service worker caches the app files on first load, so Trinity opens even with no connection. When a new version is deployed, the worker fetches it in the background and it applies on your next visit.</div>
-    </details>
-  </section>
-
-  <footer>
-    Everything stays in this browser. Nothing is uploaded.<br />
-    <a href="#" id="clearAll">Clear all data</a>
-  </footer>
+    </form>
+  </div>
 </div>
 
+<!-- Data menu -->
+<div class="menu-pop" id="dataMenu" hidden>
+  <button id="mImport">⬆ Import backup</button>
+  <button id="mBackup">⬇ Backup (with photos)</button>
+  <button id="mCsv">▤ Export CSV</button>
+  <div class="sep"></div>
+  <button id="mClear" class="danger">🗑 Clear all data</button>
+</div>
+<input type="file" id="importFile" accept="application/json,.json" hidden />
+
+<!-- Lightbox -->
+<div class="backdrop" id="lightbox" hidden><img id="lightboxImg" alt="Writing sample" /></div>
+
 <!-- Profile modal -->
-<div class="modal-backdrop" id="modal" hidden>
+<div class="backdrop" id="modal" hidden style="align-items:center;justify-content:center;padding:16px">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h3 id="modalTitle">Welcome to Trinity</h3>
+    <h3 id="modalTitle" class="serif"><svg class="logo"><use href="#i-nib"/></svg> Welcome to Trinity</h3>
     <p class="modal-sub">Add your name for a personal touch. Optional, and it stays on this device.</p>
     <label for="mName">Name</label>
     <input type="text" id="mName" placeholder="Your name" maxlength="40" />
-    <label for="mQuote">A short quote or flair (optional)</label>
+    <label for="mQuote" style="margin-top:12px">A short quote or flair (optional)</label>
     <input type="text" id="mQuote" placeholder="e.g. Ink first, decisions later" maxlength="80" />
     <div class="modal-actions">
       <button class="btn ghost" id="mSkip" type="button">Skip</button>
@@ -440,16 +534,11 @@
   var STORE_KEY = "trinity.entries.v1";
   var THEME_KEY = "trinity.theme";
   var PROFILE_KEY = "trinity.profile";
+  var VIEW_KEY = "trinity.view";
   var EXP_WORDS = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Great", 5: "Excellent" };
 
-  var NIBS = [
-    "Needlepoint", "Ultra Extra Fine", "Extra Extra Fine", "Extra Fine", "Fine",
-    "Fine-Medium", "Medium", "Medium-Broad", "Broad", "Double Broad", "Triple Broad",
-    "Stub 1.1", "Stub 1.5", "Stub 1.9", "Italic", "Cursive Italic", "Oblique",
-    "Left Oblique", "Architect", "Music", "Flex", "Soft", "Zoom", "Fude (bent)", "Posting"
-  ];
+  var NIBS = ["Needlepoint","Ultra Extra Fine","Extra Extra Fine","Extra Fine","Fine","Fine-Medium","Medium","Medium-Broad","Broad","Double Broad","Triple Broad","Stub 1.1","Stub 1.5","Stub 1.9","Italic","Cursive Italic","Oblique","Left Oblique","Architect","Music","Flex","Soft","Zoom","Fude (bent)","Posting"];
 
-  // Preloaded suggestions only. Typing any custom name is always allowed and remembered.
   var PRELOAD_PENS = [
     "Lamy Safari","Lamy Al-Star","Lamy Vista","Lamy 2000","Lamy Studio","Lamy Aion","Lamy Scala","Lamy Nexx","Lamy Joy","Lamy LX","Lamy CP1","Lamy Logo","Lamy Imporium","Lamy Dialog 3",
     "Pilot Metropolitan","Pilot Kakuno","Pilot Prera","Pilot Plumix","Pilot 78G","Pilot Penmanship","Pilot Explorer","Pilot Custom 74","Pilot Custom 823","Pilot Custom 912","Pilot Custom 743","Pilot Custom Heritage 92","Pilot Custom Heritage 912","Pilot Vanishing Point","Pilot Capless","Pilot Decimo","Pilot E95s","Pilot Falcon","Pilot Elabo","Pilot Justus 95","Pilot Custom Urushi","Pilot Murex","Pilot Myu",
@@ -467,7 +556,7 @@
     "Aurora 88","Aurora Optima","Aurora Ipsilon","Aurora Talentum",
     "Visconti Homo Sapiens","Visconti Van Gogh","Visconti Rembrandt","Visconti Opera",
     "Pineider Avatar","Pineider La Grande Bellezza",
-    "Leonardo Momento Zero","Leonardo Momento Zero Grande","Leonardo Furore","Leonardo MZ Grande",
+    "Leonardo Momento Zero","Leonardo Momento Zero Grande","Leonardo Furore",
     "Opus 88 Koloro","Opus 88 Jazz","Opus 88 Omar","Opus 88 Demo","Opus 88 Picnic","Opus 88 Fantasia","Opus 88 Minty",
     "Nahvalur Original","Nahvalur Schuylkill","Nahvalur Nautilus",
     "Diplomat Aero","Diplomat Excellence","Diplomat Traveller","Diplomat Magnum",
@@ -488,7 +577,8 @@
     "Click Aristocrat","Click Falcon","Click Renaissance","Click Bina","Click Majestic",
     "Wality 69EB","Wality 71JT","Airmail 69L","Airmail 71B","Kanwrite Heritage","Kanwrite Desire","Kanwrite Nib Creaper",
     "Ratnamson 302","Ratnam Supreme","Guider Acrylic","Deccan Advocate","Deccan Krishna","Oliver Pollux","Oliver Cygnus",
-    "Camlin Elegante","Cello Butterflow","Flair Inky","Hero Fountain Pen","Submarine Fountain Pen","Stylo Art Kolkata Ebonite","Magna Carta Sapphire","Magna Carta Classic"
+    "Krishna Lyrebird","Krishna Lyrebird 110",
+    "Camlin Elegante","Cello Butterflow","Flair Inky","Submarine Fountain Pen","Stylo Art Kolkata Ebonite","Magna Carta Sapphire","Magna Carta Classic"
   ];
   var PRELOAD_INKS = [
     "Pilot Iroshizuku Kon-peki","Pilot Iroshizuku Asa-gao","Pilot Iroshizuku Tsuki-yo","Pilot Iroshizuku Shin-kai","Pilot Iroshizuku Yama-budo","Pilot Iroshizuku Momiji","Pilot Iroshizuku Fuyu-syogun","Pilot Iroshizuku Take-sumi","Pilot Iroshizuku Ku-jaku","Pilot Iroshizuku Chiku-rin","Pilot Iroshizuku Shin-ryoku","Pilot Iroshizuku Syo-ro","Pilot Iroshizuku Ama-iro","Pilot Iroshizuku Tsutsuji","Pilot Iroshizuku Yu-yake","Pilot Iroshizuku Murasaki-shikibu","Pilot Iroshizuku Fuyu-gaki","Pilot Iroshizuku Ina-ho","Pilot Iroshizuku Kiri-same","Pilot Iroshizuku Tsukushi","Pilot Iroshizuku Hana-ikada",
@@ -505,6 +595,7 @@
     "Kaweco Royal Blue","Kaweco Midnight Blue","Kaweco Paradise Blue","Kaweco Palm Green","Kaweco Ruby Red","Kaweco Pearl Black","Kaweco Smokey Grey","Kaweco Sunrise Orange",
     "Colorverse Cosmic","Vinta Inks Sirena","Ferris Wheel Press Moss Park Green","Wearingeul Cheshire Cat","Dominant Industry Blue Hour","Van Dieman's Jurassic",
     "Krishna Sea at Night","Krishna Jungle Volcano","Krishna Pomegranate","Krishna Anokhi","Krishna Moonview","Krishna Rakthbeej","Krishna Ruby","Krishna Monsoon Sky","Krishna Superrich Green",
+    "Krishna Lyrebird Blue-Black","Krishna Lyrebird Pure Blue","Krishna Lyrebird Pure Purple","Krishna Lyrebird Turquoise Blue","Krishna Lyrebird Waterproof Blue-Black","Krishna Lyrebird Waterproof Ebony Green","Krishna Lyrebird Waterproof Rose Red",
     "Kala Series Ink","Camlin Royal Blue","Camlin Blue-Black","Camlin Black","Sulekha Royal Blue","Sulekha Blue-Black","Bril Royal Blue","Bril Blue-Black","Chelpark Royal Blue","Chelpark Black","Fosfor Ink",
     "Parker Quink Blue","Parker Quink Black","Parker Quink Blue-Black","Sheaffer Skrip Blue","Sheaffer Skrip Black"
   ];
@@ -515,8 +606,7 @@
   ];
 
   var entries = load();
-  var sortKey = "experience";
-  var sortDir = -1;
+  var pendingPhoto = null; // dataURL for the add form
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -527,111 +617,92 @@
       if (!raw) return [];
       var data = JSON.parse(raw);
       if (!Array.isArray(data)) return [];
-      // migrate old shape (quality -> experience, drop isDefault)
       return data.map(function (e) {
         return {
-          id: e.id || uid(),
-          pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "",
+          id: e.id || uid(), pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "",
           experience: Number(e.experience != null ? e.experience : e.quality) || 3,
-          comments: e.comments || "", created: e.created || Date.now()
+          comments: e.comments || "", photo: e.photo || "", created: e.created || Date.now()
         };
       });
     } catch (e) { return []; }
   }
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch (e) {}
+    localStorage.setItem(STORE_KEY, JSON.stringify(entries)); // may throw QuotaExceededError; callers handle
   }
 
   /* ---------- theme ---------- */
   function initTheme() {
-    var saved = null;
-    try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+    var saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
     if (saved) document.documentElement.setAttribute("data-theme", saved);
     $("themeBtn").addEventListener("click", function () {
       var cur = document.documentElement.getAttribute("data-theme");
       var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      var next;
-      if (!cur) next = prefersDark ? "light" : "dark";
-      else if (cur === "dark") next = "light";
-      else next = "dark";
+      var next = !cur ? (prefersDark ? "light" : "dark") : (cur === "dark" ? "light" : "dark");
       document.documentElement.setAttribute("data-theme", next);
       try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
     });
   }
 
+  /* ---------- views ---------- */
+  function showView(name) {
+    var map = { log: "viewLog", rec: "viewRec", faq: "viewFaq" };
+    Object.keys(map).forEach(function (k) { $(map[k]).hidden = (k !== name); });
+    document.querySelectorAll(".bottomnav button").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-view") === name);
+    });
+    $("fab").hidden = (name !== "log");
+    try { localStorage.setItem(VIEW_KEY, name); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+  function initNav() {
+    document.querySelectorAll(".bottomnav button").forEach(function (b) {
+      b.addEventListener("click", function () { showView(b.getAttribute("data-view")); });
+    });
+    var start = "log"; try { start = localStorage.getItem(VIEW_KEY) || "log"; } catch (e) {}
+    showView(start);
+  }
+
   /* ---------- profile ---------- */
-  function getProfile() {
-    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null"); } catch (e) { return null; }
-  }
-  function setProfile(p) {
-    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {}
-    renderProfile();
-  }
+  function getProfile() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null"); } catch (e) { return null; } }
+  function setProfile(p) { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {} renderProfile(); }
   function renderProfile() {
-    var p = getProfile() || {};
-    var name = (p.name || "").trim();
-    var quote = (p.quote || "").trim();
+    var p = getProfile() || {}; var name = (p.name || "").trim(); var quote = (p.quote || "").trim();
     $("avatar").textContent = name ? name.charAt(0).toUpperCase() : "✒";
     $("profileName").textContent = name || "Set up profile";
-    $("profileQuote").textContent = quote;
-    $("profileQuote").style.display = quote ? "block" : "none";
+    $("profileQuote").textContent = quote; $("profileQuote").style.display = quote ? "block" : "none";
   }
   function openModal() {
-    var p = getProfile() || {};
-    $("mName").value = p.name || "";
-    $("mQuote").value = p.quote || "";
-    $("modal").hidden = false;
-    setTimeout(function () { $("mName").focus(); }, 30);
+    var p = getProfile() || {}; $("mName").value = p.name || ""; $("mQuote").value = p.quote || "";
+    $("modal").hidden = false; setTimeout(function () { $("mName").focus(); }, 30);
   }
-  function closeModal() { $("modal").hidden = true; }
   function initProfile() {
     renderProfile();
-    if (!getProfile()) openModal(); // first visit only
+    if (!getProfile()) openModal();
     $("profileChip").addEventListener("click", openModal);
-    $("profileChip").addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(); }
-    });
-    $("mSave").addEventListener("click", function () {
-      setProfile({ name: $("mName").value.trim(), quote: $("mQuote").value.trim(), seen: true });
-      closeModal();
-    });
-    $("mSkip").addEventListener("click", function () {
-      setProfile(getProfile() || { name: "", quote: "", seen: true });
-      closeModal();
-    });
-    $("modal").addEventListener("click", function (e) {
-      if (e.target === $("modal")) { if (!getProfile()) setProfile({ name: "", quote: "", seen: true }); closeModal(); }
-    });
+    $("profileChip").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(); } });
+    $("mSave").addEventListener("click", function () { setProfile({ name: $("mName").value.trim(), quote: $("mQuote").value.trim(), seen: true }); $("modal").hidden = true; });
+    $("mSkip").addEventListener("click", function () { setProfile(getProfile() || { name: "", quote: "", seen: true }); $("modal").hidden = true; });
+    $("modal").addEventListener("click", function (e) { if (e.target === $("modal")) { if (!getProfile()) setProfile({ name: "", quote: "", seen: true }); $("modal").hidden = true; } });
   }
 
   /* ---------- helpers ---------- */
-  function esc(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
   /* ---------- nib select ---------- */
   function initNibSelect() {
     var sel = $("nib");
-    var html = '<option value="">Nib…</option>';
-    html += NIBS.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("");
-    html += '<option value="__other">Other (type your own)…</option>';
-    sel.innerHTML = html;
+    sel.innerHTML = '<option value="">None / unspecified</option>' +
+      NIBS.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join("") +
+      '<option value="__other">Other (type your own)…</option>';
     sel.addEventListener("change", function () {
-      var other = sel.value === "__other";
-      $("nibOtherWrap").hidden = !other;
+      var other = sel.value === "__other"; $("nibOtherWrap").hidden = !other;
       if (other) setTimeout(function () { $("nibOther").focus(); }, 20);
     });
   }
-  function readNib() {
-    var sel = $("nib");
-    if (sel.value === "__other") return $("nibOther").value.trim();
-    return sel.value;
-  }
+  function readNib() { var sel = $("nib"); return sel.value === "__other" ? $("nibOther").value.trim() : sel.value; }
 
-  /* ---------- datalists ---------- */
+  /* ---------- datalists + nib filter ---------- */
   function refreshDatalists() {
     fillDatalist("penList", "pen", PRELOAD_PENS);
     fillDatalist("inkList", "ink", PRELOAD_INKS);
@@ -639,165 +710,122 @@
   }
   function fillDatalist(id, key, preload) {
     var seen = {}, opts = [];
-    function add(v) {
-      v = (v || "").trim();
-      if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); }
-    }
-    entries.forEach(function (e) { add(e[key]); }); // user's own entries first
+    function add(v) { v = (v || "").trim(); if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); } }
+    entries.forEach(function (e) { add(e[key]); });
     preload.forEach(add);
     $(id).innerHTML = opts.map(function (o) { return '<option value="' + esc(o) + '"></option>'; }).join("");
   }
-
-  /* ---------- nib filter ---------- */
   function refreshNibFilter() {
-    var cur = $("filterNib").value;
-    var seen = {}, opts = [];
-    entries.forEach(function (e) {
-      var v = (e.nib || "").trim();
-      if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); }
-    });
+    var cur = $("filterNib").value, seen = {}, opts = [];
+    entries.forEach(function (e) { var v = (e.nib || "").trim(); if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); } });
     opts.sort(function (a, b) { return a.localeCompare(b); });
-    $("filterNib").innerHTML = '<option value="">All nibs</option>' +
-      opts.map(function (o) { return '<option value="' + esc(o) + '">' + esc(o) + '</option>'; }).join("");
+    $("filterNib").innerHTML = '<option value="">All nibs</option>' + opts.map(function (o) { return '<option value="' + esc(o) + '">' + esc(o) + '</option>'; }).join("");
     if (opts.indexOf(cur) !== -1) $("filterNib").value = cur;
   }
 
-  /* ---------- render table ---------- */
+  /* ---------- render log ---------- */
   function render() {
-    var tbody = $("tbody");
     var q = $("search").value.trim().toLowerCase();
-    var fe = $("filterExperience").value;
-    var fn = $("filterNib").value;
+    var fe = $("filterExperience").value, fn = $("filterNib").value, sortBy = $("sortBy").value;
 
     var rows = entries.filter(function (e) {
       if (fe && String(e.experience) !== fe) return false;
       if (fn && e.nib !== fn) return false;
-      if (q) {
-        var hay = (e.pen + " " + e.nib + " " + e.ink + " " + e.paper + " " + (e.comments || "")).toLowerCase();
-        if (hay.indexOf(q) === -1) return false;
-      }
+      if (q) { var hay = (e.pen + " " + e.nib + " " + e.ink + " " + e.paper + " " + (e.comments || "")).toLowerCase(); if (hay.indexOf(q) === -1) return false; }
       return true;
     });
 
     rows.sort(function (a, b) {
-      var av = a[sortKey], bv = b[sortKey];
-      if (sortKey === "experience") { return ((Number(av) || 0) - (Number(bv) || 0)) * sortDir; }
-      return String(av || "").localeCompare(String(bv || "")) * sortDir;
+      if (sortBy === "exp_desc") return (Number(b.experience) || 0) - (Number(a.experience) || 0) || (b.created - a.created);
+      if (sortBy === "exp_asc") return (Number(a.experience) || 0) - (Number(b.experience) || 0) || (b.created - a.created);
+      if (sortBy === "pen") return String(a.pen).localeCompare(String(b.pen));
+      return (b.created || 0) - (a.created || 0);
     });
 
-    tbody.innerHTML = rows.map(function (e) {
+    $("logList").innerHTML = rows.map(function (e) {
       var qn = Number(e.experience) || 3;
-      return "<tr>" +
-        "<td>" + esc(e.pen) + "</td>" +
-        "<td class=\"nib\">" + (e.nib ? esc(e.nib) : "<span style=\"opacity:.5\">–</span>") + "</td>" +
-        "<td>" + esc(e.ink) + "</td>" +
-        "<td>" + esc(e.paper) + "</td>" +
-        "<td><span class=\"pill q" + qn + "\">" + EXP_WORDS[qn] + "</span></td>" +
-        "<td class=\"comments\">" + esc(e.comments || "") + "</td>" +
-        "<td class=\"row-actions\"><button class=\"icon-btn\" data-del=\"" + e.id + "\" title=\"Delete\">✕</button></td>" +
-        "</tr>";
+      var nibLine = e.nib ? '<div class="nibsub">with ' + esc(e.nib) + ' nib</div>' : '<div class="nibsub empty"></div>';
+      var thumb = e.photo ? '<div class="thumb"><img src="' + e.photo + '" data-photo="' + e.id + '" alt="Writing sample" loading="lazy"/></div>' : '';
+      var comment = e.comments ? '<div class="comment">' + esc(e.comments) + '</div>' : '';
+      return '<div class="card">' +
+        '<button class="del" data-del="' + e.id + '" title="Delete">✕</button>' +
+        '<div class="pen"><svg class="nibmark"><use href="#i-nib"/></svg>' + esc(e.pen) + '</div>' + nibLine +
+        '<div class="combo"><span><span class="lbl">Ink:</span> ' + esc(e.ink) + '</span><span><span class="lbl">Paper:</span> ' + esc(e.paper) + '</span></div>' +
+        '<div class="meta"><span class="pill q' + qn + '">' + EXP_WORDS[qn] + '</span></div>' +
+        comment + thumb +
+        '</div>';
     }).join("");
 
     $("emptyState").hidden = entries.length !== 0;
-    $("logCount").textContent = entries.length
-      ? (rows.length === entries.length ? entries.length + " logged" : rows.length + " of " + entries.length + " shown")
-      : "";
-    updateArrows();
-  }
-
-  function updateArrows() {
-    document.querySelectorAll("thead th[data-sort]").forEach(function (th) {
-      var arrow = th.querySelector(".arrow");
-      if (th.getAttribute("data-sort") === sortKey) {
-        arrow.textContent = sortDir === 1 ? "▲" : "▼"; arrow.style.opacity = ".9";
-      } else { arrow.textContent = ""; }
-    });
+    $("logList").hidden = entries.length === 0;
+    $("logCount").textContent = entries.length ? (rows.length === entries.length ? "· " + entries.length : "· " + rows.length + " of " + entries.length) : "";
   }
 
   /* ---------- recommender ---------- */
   function recommend() {
-    var pen = $("recPen").value.trim().toLowerCase();
-    var ink = $("recInk").value.trim().toLowerCase();
-    var box = $("recResult");
-
-    if (!pen && !ink) {
-      box.innerHTML = "<div class=\"rec-note\">Enter a pen and/or ink you've logged, then hit Recommend.</div>";
-      return;
-    }
-
-    var matches = entries.filter(function (e) {
-      var okPen = !pen || e.pen.toLowerCase() === pen;
-      var okInk = !ink || e.ink.toLowerCase() === ink;
-      return okPen && okInk;
-    });
-
-    if (!matches.length) {
-      box.innerHTML = "<div class=\"rec-note\">No logged combinations for that pen + ink yet. Add a few ratings and the recommendation will sharpen.</div>";
-      return;
-    }
-
+    var pen = $("recPen").value.trim().toLowerCase(), ink = $("recInk").value.trim().toLowerCase(), box = $("recResult");
+    var paperNode = $("paperNode");
+    if (!pen && !ink) { box.innerHTML = '<div class="rec-note">Enter a pen and/or ink you have logged, then tap Recommend.</div>'; paperNode.setAttribute("fill", "var(--line-strong)"); return; }
+    var matches = entries.filter(function (e) { return (!pen || e.pen.toLowerCase() === pen) && (!ink || e.ink.toLowerCase() === ink); });
+    if (!matches.length) { box.innerHTML = '<div class="rec-note">No logged combinations for that pen and ink yet. Add a few ratings and the recommendation will sharpen.</div>'; paperNode.setAttribute("fill", "var(--line-strong)"); return; }
     var byPaper = {};
-    matches.forEach(function (e) {
-      var key = (e.paper || "").trim();
-      if (!key) return;
-      if (!byPaper[key]) byPaper[key] = { paper: key, sum: 0, n: 0 };
-      byPaper[key].sum += Number(e.experience) || 0;
-      byPaper[key].n += 1;
-    });
-
-    var ranked = Object.keys(byPaper).map(function (k) {
-      var r = byPaper[k]; r.avg = r.sum / r.n; return r;
-    }).sort(function (a, b) {
-      if (b.avg !== a.avg) return b.avg - a.avg;
-      return b.n - a.n;
-    });
-
-    var label = [];
-    if (pen) label.push($("recPen").value.trim());
-    if (ink) label.push($("recInk").value.trim());
-
-    var html = "<div class=\"rec-note\">For <strong>" + esc(label.join(" + ")) + "</strong>, ranked by your average experience:</div>";
+    matches.forEach(function (e) { var k = (e.paper || "").trim(); if (!k) return; if (!byPaper[k]) byPaper[k] = { paper: k, sum: 0, n: 0 }; byPaper[k].sum += Number(e.experience) || 0; byPaper[k].n += 1; });
+    var ranked = Object.keys(byPaper).map(function (k) { var r = byPaper[k]; r.avg = r.sum / r.n; return r; })
+      .sort(function (a, b) { return b.avg !== a.avg ? b.avg - a.avg : b.n - a.n; });
+    paperNode.setAttribute("fill", "var(--good)");
+    var label = []; if (pen) label.push($("recPen").value.trim()); if (ink) label.push($("recInk").value.trim());
+    var html = '<div class="rec-note">For <strong>' + esc(label.join(" + ")) + '</strong>, ranked by your average experience:</div>';
     html += ranked.map(function (r, i) {
       var qn = Math.max(1, Math.min(5, Math.round(r.avg)));
       var evidence = r.n === 1 ? "1 entry" : r.n + " entries";
-      return "<div class=\"rec-line" + (i === 0 ? " top" : "") + "\">" +
-        (i === 0 ? "<span>🏆</span>" : "<span style=\"color:var(--muted)\">#" + (i + 1) + "</span>") +
-        "<span class=\"paper-name\">" + esc(r.paper) + "</span>" +
-        "<span class=\"pill q" + qn + "\">" + EXP_WORDS[qn] + "</span>" +
-        "<span class=\"why\">avg " + r.avg.toFixed(1) + " / 5 · " + evidence + "</span>" +
-        "</div>";
+      return '<div class="rec-line' + (i === 0 ? " top" : "") + '">' +
+        (i === 0 ? '<span>🏆</span>' : '<span class="rank">#' + (i + 1) + '</span>') +
+        '<span class="paper-name">' + esc(r.paper) + '</span>' +
+        '<span class="pill q' + qn + '">' + EXP_WORDS[qn] + '</span>' +
+        '<span class="why">avg ' + r.avg.toFixed(1) + ' / 5 · ' + evidence + '</span></div>';
     }).join("");
     box.innerHTML = html;
   }
 
+  /* ---------- photo ---------- */
+  function compressImage(file, cb) {
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function () {
+      var max = 900, w = img.width, h = img.height;
+      if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+      else if (h >= w && h > max) { w = Math.round(w * max / h); h = max; }
+      var c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      var data;
+      try { data = c.toDataURL("image/jpeg", 0.6); } catch (e) { data = null; }
+      URL.revokeObjectURL(url); cb(data);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+    img.src = url;
+  }
+  function setPendingPhoto(data) {
+    pendingPhoto = data || null;
+    $("photoPreview").hidden = !pendingPhoto;
+    if (pendingPhoto) { $("photoImg").src = pendingPhoto; $("photoStatus").textContent = ""; }
+  }
+
   /* ---------- export / import ---------- */
   function downloadBlob(content, filename, type) {
-    var blob = new Blob([content], { type: type });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    var blob = new Blob([content], { type: type }), url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
   function exportCSV() {
     if (!entries.length) { alert("Nothing to export yet."); return; }
-    var head = ["Pen", "Nib", "Ink", "Paper", "Experience", "Comments"];
+    var head = ["Pen", "Nib", "Ink", "Paper", "Experience", "Notes", "Has photo"];
     var lines = [head.map(csvCell).join(",")];
-    entries.forEach(function (e) {
-      lines.push([e.pen, e.nib, e.ink, e.paper, EXP_WORDS[Number(e.experience) || 3], e.comments || ""].map(csvCell).join(","));
-    });
+    entries.forEach(function (e) { lines.push([e.pen, e.nib, e.ink, e.paper, EXP_WORDS[Number(e.experience) || 3], e.comments || "", e.photo ? "yes" : "no"].map(csvCell).join(",")); });
     downloadBlob(lines.join("\r\n"), "trinity-log.csv", "text/csv;charset=utf-8;");
   }
-  function csvCell(v) {
-    v = String(v == null ? "" : v);
-    if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
-    return v;
-  }
+  function csvCell(v) { v = String(v == null ? "" : v); if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"'; return v; }
   function exportJSON() {
     if (!entries.length) { alert("Nothing to back up yet."); return; }
     var stamp = new Date().toISOString().slice(0, 10);
-    downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: entries }, null, 2),
-      "trinity-backup-" + stamp + ".json", "application/json");
+    downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: entries }, null, 2), "trinity-backup-" + stamp + ".json", "application/json");
   }
   function importJSON(file) {
     var reader = new FileReader();
@@ -807,18 +835,23 @@
         var list = Array.isArray(data) ? data : (data && Array.isArray(data.entries) ? data.entries : null);
         if (!list) { alert("That file does not look like a Trinity backup."); return; }
         if (entries.length && !confirm("Import " + list.length + " entries? This replaces your current " + entries.length + " entries.")) return;
-        entries = list.map(function (e) {
-          return {
-            id: e.id || uid(), pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "",
-            experience: Number(e.experience != null ? e.experience : e.quality) || 3,
-            comments: e.comments || "", created: e.created || Date.now()
-          };
-        });
-        save(); refreshDatalists(); refreshNibFilter(); render();
+        var prev = entries;
+        entries = list.map(function (e) { return { id: e.id || uid(), pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "", experience: Number(e.experience != null ? e.experience : e.quality) || 3, comments: e.comments || "", photo: e.photo || "", created: e.created || Date.now() }; });
+        try { save(); } catch (err) { entries = prev; alert("Import too large for this browser's storage. Try a backup with fewer photos."); return; }
+        refreshDatalists(); refreshNibFilter(); render();
         alert("Imported " + entries.length + " entries.");
       } catch (err) { alert("Could not read that file: " + err.message); }
     };
     reader.readAsText(file);
+  }
+
+  /* ---------- add sheet ---------- */
+  function openSheet() { $("addSheet").hidden = false; setTimeout(function () { $("pen").focus(); }, 40); }
+  function closeSheet() { $("addSheet").hidden = true; }
+  function resetForm() {
+    $("pen").value = ""; $("ink").value = ""; $("paper").value = ""; $("nib").value = "";
+    $("nibOther").value = ""; $("nibOtherWrap").hidden = true; $("experience").value = "3"; $("comments").value = "";
+    setPendingPhoto(null); $("photoStatus").textContent = "";
   }
 
   /* ---------- events ---------- */
@@ -826,72 +859,73 @@
     ev.preventDefault();
     var pen = $("pen").value.trim(), ink = $("ink").value.trim(), paper = $("paper").value.trim();
     if (!pen || !ink || !paper) return;
-    entries.push({
-      id: uid(), pen: pen, nib: readNib(), ink: ink, paper: paper,
-      experience: Number($("experience").value) || 3,
-      comments: $("comments").value.trim(), created: Date.now()
-    });
-    save();
-    $("pen").value = ""; $("ink").value = ""; $("paper").value = "";
-    $("nib").value = ""; $("nibOther").value = ""; $("nibOtherWrap").hidden = true;
-    $("experience").value = "3"; $("comments").value = "";
-    refreshDatalists(); refreshNibFilter(); render();
-    $("pen").focus();
-  });
-
-  $("tbody").addEventListener("click", function (ev) {
-    var btn = ev.target.closest("[data-del]");
-    if (!btn) return;
-    var id = btn.getAttribute("data-del");
-    var e = entries.find(function (x) { return x.id === id; });
-    var name = e ? (e.pen + " · " + e.ink + " · " + e.paper) : "this entry";
-    if (confirm("Delete " + name + "?")) {
-      entries = entries.filter(function (x) { return x.id !== id; });
-      save(); refreshDatalists(); refreshNibFilter(); render();
+    var entry = { id: uid(), pen: pen, nib: readNib(), ink: ink, paper: paper, experience: Number($("experience").value) || 3, comments: $("comments").value.trim(), photo: pendingPhoto || "", created: Date.now() };
+    entries.push(entry);
+    try { save(); }
+    catch (err) {
+      entries.pop();
+      if (entry.photo) { entry.photo = ""; entries.push(entry); try { save(); alert("Storage was full, so the entry was saved without the photo. Consider Backup to free space."); } catch (e2) { entries.pop(); alert("Storage is full. Back up and clear some entries, then try again."); return; } }
+      else { alert("Storage is full. Back up and clear some entries, then try again."); return; }
     }
+    resetForm(); closeSheet(); refreshDatalists(); refreshNibFilter(); render();
   });
 
-  document.querySelectorAll("thead th[data-sort]").forEach(function (th) {
-    th.addEventListener("click", function () {
-      var key = th.getAttribute("data-sort");
-      if (sortKey === key) sortDir = -sortDir;
-      else { sortKey = key; sortDir = (key === "experience") ? -1 : 1; }
-      render();
-    });
+  $("logList").addEventListener("click", function (ev) {
+    var del = ev.target.closest("[data-del]");
+    if (del) {
+      var id = del.getAttribute("data-del"), e = entries.find(function (x) { return x.id === id; });
+      var name = e ? (e.pen + " · " + e.ink + " · " + e.paper) : "this entry";
+      if (confirm("Delete " + name + "?")) { entries = entries.filter(function (x) { return x.id !== id; }); try { save(); } catch (er) {} refreshDatalists(); refreshNibFilter(); render(); }
+      return;
+    }
+    var ph = ev.target.closest("[data-photo]");
+    if (ph) { $("lightboxImg").src = ph.getAttribute("src"); $("lightbox").hidden = false; }
   });
+  $("lightbox").addEventListener("click", function () { $("lightbox").hidden = true; });
 
-  $("search").addEventListener("input", render);
-  $("filterExperience").addEventListener("change", render);
-  $("filterNib").addEventListener("change", render);
+  ["search", "filterExperience", "filterNib", "sortBy"].forEach(function (id) { $(id).addEventListener(id === "search" ? "input" : "change", render); });
+
   $("recBtn").addEventListener("click", recommend);
-  $("exportBtn").addEventListener("click", exportCSV);
-  $("exportJsonBtn").addEventListener("click", exportJSON);
-  $("importBtn").addEventListener("click", function () { $("importFile").click(); });
-  $("importFile").addEventListener("change", function (ev) {
-    if (ev.target.files && ev.target.files[0]) importJSON(ev.target.files[0]);
+
+  $("fab").addEventListener("click", openSheet);
+  $("emptyAdd").addEventListener("click", openSheet);
+  $("addClose").addEventListener("click", closeSheet);
+  $("addSheet").addEventListener("click", function (e) { if (e.target === $("addSheet")) closeSheet(); });
+
+  $("photoBtn").addEventListener("click", function () { $("photoInput").click(); });
+  $("photoInput").addEventListener("change", function (ev) {
+    var f = ev.target.files && ev.target.files[0]; if (!f) return;
+    $("photoStatus").textContent = "Processing…";
+    compressImage(f, function (data) { if (data) setPendingPhoto(data); else $("photoStatus").textContent = "Could not read that image."; });
     ev.target.value = "";
   });
-  $("clearAll").addEventListener("click", function (ev) {
-    ev.preventDefault();
-    if (!entries.length) return;
-    if (confirm("Delete ALL " + entries.length + " logged combinations? This cannot be undone. Consider Backup first.")) {
-      entries = []; save(); refreshDatalists(); refreshNibFilter(); render();
-    }
+  $("photoRemove").addEventListener("click", function () { setPendingPhoto(null); });
+
+  // data menu
+  function toggleDataMenu() {
+    var m = $("dataMenu");
+    if (!m.hidden) { m.hidden = true; return; }
+    var r = $("dataBtn").getBoundingClientRect();
+    m.style.top = (r.bottom + 6) + "px";
+    m.style.right = (window.innerWidth - r.right) + "px";
+    m.hidden = false;
+  }
+  $("dataBtn").addEventListener("click", function (e) { e.stopPropagation(); toggleDataMenu(); });
+  document.addEventListener("click", function (e) { if (!$("dataMenu").hidden && !$("dataMenu").contains(e.target) && e.target !== $("dataBtn")) $("dataMenu").hidden = true; });
+  $("mBackup").addEventListener("click", function () { $("dataMenu").hidden = true; exportJSON(); });
+  $("mCsv").addEventListener("click", function () { $("dataMenu").hidden = true; exportCSV(); });
+  $("mImport").addEventListener("click", function () { $("dataMenu").hidden = true; $("importFile").click(); });
+  $("importFile").addEventListener("change", function (ev) { if (ev.target.files && ev.target.files[0]) importJSON(ev.target.files[0]); ev.target.value = ""; });
+  $("mClear").addEventListener("click", function () {
+    $("dataMenu").hidden = true;
+    if (!entries.length) { alert("Nothing to clear."); return; }
+    if (confirm("Delete ALL " + entries.length + " combinations? This cannot be undone. Consider Backup first.")) { entries = []; try { save(); } catch (e) {} refreshDatalists(); refreshNibFilter(); render(); }
   });
+  $("clearAll").addEventListener("click", function (ev) { ev.preventDefault(); $("mClear").click(); });
 
   /* ---------- boot ---------- */
-  initTheme();
-  initProfile();
-  initNibSelect();
-  refreshDatalists();
-  refreshNibFilter();
-  render();
-
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
-    });
-  }
+  initTheme(); initProfile(); initNav(); initNibSelect(); refreshDatalists(); refreshNibFilter(); render();
+  if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 })();
 </script>
 </body>
