@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trinity — pen · ink · paper log</title>
+<meta name="description" content="A tiny offline log for your fountain-pen combinations: pen, ink, paper, quality — with a pairing recommender. Your data stays in your browser." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%92%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --panel: #fffdf8;
+    --ink: #2a2622;
+    --muted: #7a7268;
+    --line: #e3ddd1;
+    --line-strong: #d3cabb;
+    --accent: #6b4f9e;
+    --accent-soft: #ece5f6;
+    --good: #3f7d54;
+    --bad: #b25b4a;
+    --shadow: 0 1px 2px rgba(40,34,28,.06), 0 8px 24px rgba(40,34,28,.06);
+    --radius: 12px;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #17151a;
+      --panel: #201d24;
+      --ink: #ece7f2;
+      --muted: #a49bb0;
+      --line: #322c3a;
+      --line-strong: #423a4d;
+      --accent: #b7a0e6;
+      --accent-soft: #2b2437;
+      --good: #7ac48f;
+      --bad: #e08f7f;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17151a;
+    --panel: #201d24;
+    --ink: #ece7f2;
+    --muted: #a49bb0;
+    --line: #322c3a;
+    --line-strong: #423a4d;
+    --accent: #b7a0e6;
+    --accent-soft: #2b2437;
+    --good: #7ac48f;
+    --bad: #e08f7f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 80px; }
+
+  header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px; letter-spacing: .2px; margin: 0; font-weight: 600;
+  }
+  h1 .mark { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 14px; }
+  .theme-btn {
+    border: 1px solid var(--line-strong); background: var(--panel); color: var(--muted);
+    border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+  }
+  .theme-btn:hover { color: var(--ink); }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 18px; margin-top: 20px;
+  }
+  .card h2 {
+    font-family: Georgia, serif; font-size: 17px; margin: 0 0 14px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .count { color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 400; }
+
+  /* Add form */
+  .addform { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.pen { grid-column: span 3; }
+  .field.ink { grid-column: span 3; }
+  .field.paper { grid-column: span 3; }
+  .field.quality { grid-column: span 3; }
+  .field.comments { grid-column: span 9; }
+  .field.default { grid-column: span 3; }
+  label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+  input[type="text"], select, textarea {
+    background: var(--bg); color: var(--ink); border: 1px solid var(--line-strong);
+    border-radius: 9px; padding: 9px 11px; font-size: 14px; font-family: inherit; width: 100%;
+  }
+  textarea { resize: vertical; min-height: 40px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .check-inline { display: flex; align-items: center; gap: 8px; height: 40px; }
+  .check-inline input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .check-inline span { font-size: 14px; color: var(--ink); text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+  .btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 9px;
+    padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { filter: brightness(1.05); }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line-strong); }
+  .btn.ghost:hover { background: var(--accent-soft); }
+  .btn.tiny { padding: 5px 10px; font-size: 12px; }
+  .actions-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .field.submit { grid-column: span 3; }
+
+  /* Toolbar */
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .toolbar input[type="text"] { max-width: 240px; }
+  .toolbar select { max-width: 190px; }
+  .spacer { flex: 1; }
+
+  /* Table */
+  .table-scroll { overflow-x: auto; margin: 0 -6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 720px; }
+  thead th {
+    text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .4px;
+    color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 2px solid var(--line-strong);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  thead th.nosort { cursor: default; }
+  thead th .arrow { opacity: .4; font-size: 10px; }
+  tbody td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:hover { background: var(--accent-soft); }
+  td.comments { color: var(--muted); max-width: 260px; }
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .q1 { background: #f2d9d3; color: #8f3f2e; }
+  .q2 { background: #f6e6cf; color: #8a5a1e; }
+  .q3 { background: #eee9d8; color: #6d6338; }
+  .q4 { background: #d9ecdb; color: #2f6a44; }
+  .q5 { background: #cfe6e9; color: #216068; }
+  :root[data-theme="dark"] .q1, :root:not([data-theme="light"]) .q1 { }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --dq: 1;
+  }}
+  .badge-default { font-size: 16px; }
+  .row-actions { white-space: nowrap; text-align: right; }
+  .icon-btn {
+    background: transparent; border: 1px solid var(--line); border-radius: 7px; cursor: pointer;
+    padding: 4px 8px; font-size: 13px; color: var(--muted);
+  }
+  .icon-btn:hover { color: var(--bad); border-color: var(--bad); }
+
+  .empty { text-align: center; color: var(--muted); padding: 34px 10px; font-style: italic; }
+
+  /* Recommender */
+  .rec-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+  .rec-result { margin-top: 14px; }
+  .rec-line { padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; margin-top: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rec-line.top { border-color: var(--good); background: color-mix(in srgb, var(--good) 8%, transparent); }
+  .rec-line .paper-name { font-weight: 600; }
+  .rec-line .why { color: var(--muted); font-size: 13px; }
+  .rec-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; }
+  footer a { color: var(--accent); }
+
+  @media (max-width: 720px) {
+    .addform { grid-template-columns: repeat(2, 1fr); }
+    .field.pen, .field.ink, .field.paper, .field.quality { grid-column: span 1; }
+    .field.comments { grid-column: span 2; }
+    .field.default, .field.submit { grid-column: span 1; }
+    .rec-form { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">
+        <h1><span class="mark">✒</span> Trinity</h1>
+        <span class="tagline">pen · ink · paper — a log of what writes well together</span>
+      </div>
+    </div>
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">◐ Theme</button>
+  </header>
+
+  <!-- Add a combination -->
+  <section class="card">
+    <h2>Add a combination</h2>
+    <form class="addform" id="addForm" autocomplete="off">
+      <div class="field pen">
+        <label for="pen">Pen</label>
+        <input type="text" id="pen" list="penList" placeholder="e.g. Lamy 2000 (EF)" required />
+      </div>
+      <div class="field ink">
+        <label for="ink">Ink</label>
+        <input type="text" id="ink" list="inkList" placeholder="e.g. Iroshizuku Kon-peki" required />
+      </div>
+      <div class="field paper">
+        <label for="paper">Paper</label>
+        <input type="text" id="paper" list="paperList" placeholder="e.g. Tomoe River 52gsm" required />
+      </div>
+      <div class="field quality">
+        <label for="quality">Quality</label>
+        <select id="quality">
+          <option value="1">Poor</option>
+          <option value="2">Fair</option>
+          <option value="3" selected>Good</option>
+          <option value="4">Great</option>
+          <option value="5">Excellent</option>
+        </select>
+      </div>
+      <div class="field comments">
+        <label for="comments">Comments</label>
+        <textarea id="comments" placeholder="Feathering? Dry time? Sheen? How it felt…"></textarea>
+      </div>
+      <div class="field default">
+        <label>Setup</label>
+        <div class="check-inline">
+          <input type="checkbox" id="isDefault" checked />
+          <span>Default go-to pairing</span>
+        </div>
+      </div>
+      <div class="field submit">
+        <label>&nbsp;</label>
+        <button class="btn" type="submit">Add to log</button>
+      </div>
+    </form>
+    <datalist id="penList"></datalist>
+    <datalist id="inkList"></datalist>
+    <datalist id="paperList"></datalist>
+  </section>
+
+  <!-- Recommender -->
+  <section class="card">
+    <h2>✨ Pairing recommender <span class="count">best paper for a pen + ink, from your ratings</span></h2>
+    <div class="rec-form">
+      <div class="field">
+        <label for="recPen">Pen</label>
+        <input type="text" id="recPen" list="penList" placeholder="Pick a pen you've logged" />
+      </div>
+      <div class="field">
+        <label for="recInk">Ink</label>
+        <input type="text" id="recInk" list="inkList" placeholder="Pick an ink you've logged" />
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn ghost" id="recBtn" type="button">Recommend</button>
+      </div>
+    </div>
+    <div class="rec-result" id="recResult"></div>
+  </section>
+
+  <!-- The log -->
+  <section class="card">
+    <h2>Your log <span class="count" id="logCount"></span></h2>
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Search pen, ink, paper, comments…" />
+      <select id="filterQuality">
+        <option value="">All qualities</option>
+        <option value="5">Excellent</option>
+        <option value="4">Great</option>
+        <option value="3">Good</option>
+        <option value="2">Fair</option>
+        <option value="1">Poor</option>
+      </select>
+      <select id="filterDefault">
+        <option value="">Default &amp; experimental</option>
+        <option value="1">Default only</option>
+        <option value="0">Experimental only</option>
+      </select>
+      <span class="spacer"></span>
+      <button class="btn ghost tiny" id="exportBtn" type="button">Export CSV</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="pen">Pen <span class="arrow"></span></th>
+            <th data-sort="ink">Ink <span class="arrow"></span></th>
+            <th data-sort="paper">Paper <span class="arrow"></span></th>
+            <th data-sort="quality">Quality <span class="arrow"></span></th>
+            <th data-sort="isDefault">Default <span class="arrow"></span></th>
+            <th class="nosort">Comments</th>
+            <th class="nosort"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyState" hidden>Nothing logged yet. Add your first pen · ink · paper combination above.</div>
+  </section>
+
+  <footer>
+    Trinity — everything stays in this browser (localStorage). Nothing is uploaded.
+    &nbsp;·&nbsp; <a href="#" id="clearAll">Clear all data</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORE_KEY = "trinity.entries.v1";
+  var THEME_KEY = "trinity.theme";
+  var QUALITY_WORDS = { 1: "Poor", 2: "Fair", 3: "Good", 4: "Great", 5: "Excellent" };
+
+  var entries = load();
+  var sortKey = "quality";
+  var sortDir = -1; // -1 desc, 1 asc
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- storage ---------- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return [];
+      var data = JSON.parse(raw);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch (e) {}
+  }
+
+  /* ---------- theme ---------- */
+  function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+    $("themeBtn").addEventListener("click", function () {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var next;
+      if (!cur) next = prefersDark ? "light" : "dark";
+      else if (cur === "dark") next = "light";
+      else next = "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    });
+  }
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  /* ---------- datalists ---------- */
+  function refreshDatalists() {
+    fillDatalist("penList", "pen");
+    fillDatalist("inkList", "ink");
+    fillDatalist("paperList", "paper");
+  }
+  function fillDatalist(id, key) {
+    var seen = {}, opts = [];
+    for (var i = 0; i < entries.length; i++) {
+      var v = (entries[i][key] || "").trim();
+      if (v && !seen[v.toLowerCase()]) { seen[v.toLowerCase()] = 1; opts.push(v); }
+    }
+    opts.sort(function (a, b) { return a.localeCompare(b); });
+    $(id).innerHTML = opts.map(function (o) { return "<option value=\"" + esc(o) + "\"></option>"; }).join("");
+  }
+
+  /* ---------- render table ---------- */
+  function render() {
+    var tbody = $("tbody");
+    var q = $("search").value.trim().toLowerCase();
+    var fq = $("filterQuality").value;
+    var fd = $("filterDefault").value;
+
+    var rows = entries.filter(function (e) {
+      if (fq && String(e.quality) !== fq) return false;
+      if (fd === "1" && !e.isDefault) return false;
+      if (fd === "0" && e.isDefault) return false;
+      if (q) {
+        var hay = (e.pen + " " + e.ink + " " + e.paper + " " + (e.comments || "")).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    rows.sort(function (a, b) {
+      var av = a[sortKey], bv = b[sortKey];
+      if (sortKey === "quality" || sortKey === "isDefault") {
+        av = Number(av) || 0; bv = Number(bv) || 0;
+        return (av - bv) * sortDir;
+      }
+      return String(av || "").localeCompare(String(bv || "")) * sortDir;
+    });
+
+    tbody.innerHTML = rows.map(function (e) {
+      var qn = Number(e.quality) || 3;
+      return "<tr>" +
+        "<td>" + esc(e.pen) + "</td>" +
+        "<td>" + esc(e.ink) + "</td>" +
+        "<td>" + esc(e.paper) + "</td>" +
+        "<td><span class=\"pill q" + qn + "\">" + QUALITY_WORDS[qn] + "</span></td>" +
+        "<td>" + (e.isDefault ? "<span class=\"badge-default\" title=\"Default go-to pairing\">★</span>" : "<span style=\"color:var(--muted)\" title=\"Experimental\">–</span>") + "</td>" +
+        "<td class=\"comments\">" + esc(e.comments || "") + "</td>" +
+        "<td class=\"row-actions\"><button class=\"icon-btn\" data-del=\"" + e.id + "\" title=\"Delete\">✕</button></td>" +
+        "</tr>";
+    }).join("");
+
+    var isEmpty = entries.length === 0;
+    $("emptyState").hidden = !isEmpty;
+    $("logCount").textContent = entries.length
+      ? (rows.length === entries.length ? entries.length + " logged" : rows.length + " of " + entries.length + " shown")
+      : "";
+
+    updateArrows();
+  }
+
+  function updateArrows() {
+    var ths = document.querySelectorAll("thead th[data-sort]");
+    ths.forEach(function (th) {
+      var arrow = th.querySelector(".arrow");
+      if (th.getAttribute("data-sort") === sortKey) {
+        arrow.textContent = sortDir === 1 ? "▲" : "▼";
+        arrow.style.opacity = ".9";
+      } else { arrow.textContent = ""; }
+    });
+  }
+
+  /* ---------- recommender ---------- */
+  function recommend() {
+    var pen = $("recPen").value.trim().toLowerCase();
+    var ink = $("recInk").value.trim().toLowerCase();
+    var box = $("recResult");
+
+    if (!pen && !ink) {
+      box.innerHTML = "<div class=\"rec-note\">Enter a pen and/or ink you've logged, then hit Recommend.</div>";
+      return;
+    }
+
+    // Match entries for this pen+ink (either can be blank = wildcard)
+    var matches = entries.filter(function (e) {
+      var okPen = !pen || e.pen.toLowerCase() === pen;
+      var okInk = !ink || e.ink.toLowerCase() === ink;
+      return okPen && okInk;
+    });
+
+    if (!matches.length) {
+      box.innerHTML = "<div class=\"rec-note\">No logged combinations for that pen + ink yet. Add a few ratings and the recommendation will sharpen.</div>";
+      return;
+    }
+
+    // Aggregate by paper: average quality + count
+    var byPaper = {};
+    matches.forEach(function (e) {
+      var key = e.paper.trim();
+      if (!key) return;
+      if (!byPaper[key]) byPaper[key] = { paper: key, sum: 0, n: 0 };
+      byPaper[key].sum += Number(e.quality) || 0;
+      byPaper[key].n += 1;
+    });
+
+    var ranked = Object.keys(byPaper).map(function (k) {
+      var r = byPaper[k];
+      r.avg = r.sum / r.n;
+      return r;
+    }).sort(function (a, b) {
+      if (b.avg !== a.avg) return b.avg - a.avg;   // higher quality first
+      return b.n - a.n;                            // more evidence breaks ties
+    });
+
+    var label = [];
+    if (pen) label.push($("recPen").value.trim());
+    if (ink) label.push($("recInk").value.trim());
+
+    var html = "<div class=\"rec-note\">For <strong>" + esc(label.join(" + ")) + "</strong> — ranked by your average quality:</div>";
+    html += ranked.map(function (r, i) {
+      var qn = Math.round(r.avg);
+      var evidence = r.n === 1 ? "1 entry" : r.n + " entries";
+      return "<div class=\"rec-line" + (i === 0 ? " top" : "") + "\">" +
+        (i === 0 ? "<span>🏆</span>" : "<span style=\"color:var(--muted)\">#" + (i + 1) + "</span>") +
+        "<span class=\"paper-name\">" + esc(r.paper) + "</span>" +
+        "<span class=\"pill q" + qn + "\">" + QUALITY_WORDS[qn] + "</span>" +
+        "<span class=\"why\">avg " + r.avg.toFixed(1) + " / 5 · " + evidence + "</span>" +
+        "</div>";
+    }).join("");
+
+    box.innerHTML = html;
+  }
+
+  /* ---------- CSV export ---------- */
+  function exportCSV() {
+    if (!entries.length) { alert("Nothing to export yet."); return; }
+    var head = ["Pen", "Ink", "Paper", "Quality", "Default", "Comments"];
+    var lines = [head.map(csvCell).join(",")];
+    entries.forEach(function (e) {
+      lines.push([
+        e.pen, e.ink, e.paper,
+        QUALITY_WORDS[Number(e.quality) || 3],
+        e.isDefault ? "Default" : "Experimental",
+        e.comments || ""
+      ].map(csvCell).join(","));
+    });
+    var blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "trinity-log.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function csvCell(v) {
+    v = String(v == null ? "" : v);
+    if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+
+  /* ---------- events ---------- */
+  $("addForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var pen = $("pen").value.trim();
+    var ink = $("ink").value.trim();
+    var paper = $("paper").value.trim();
+    if (!pen || !ink || !paper) return;
+    entries.push({
+      id: uid(),
+      pen: pen, ink: ink, paper: paper,
+      quality: Number($("quality").value) || 3,
+      isDefault: $("isDefault").checked,
+      comments: $("comments").value.trim(),
+      created: Date.now()
+    });
+    save();
+    // reset but keep the "default" checkbox checked (default by default)
+    $("pen").value = ""; $("ink").value = ""; $("paper").value = "";
+    $("quality").value = "3"; $("comments").value = ""; $("isDefault").checked = true;
+    refreshDatalists();
+    render();
+    $("pen").focus();
+  });
+
+  $("tbody").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("[data-del]");
+    if (!btn) return;
+    var id = btn.getAttribute("data-del");
+    var e = entries.find(function (x) { return x.id === id; });
+    var name = e ? (e.pen + " · " + e.ink + " · " + e.paper) : "this entry";
+    if (confirm("Delete " + name + "?")) {
+      entries = entries.filter(function (x) { return x.id !== id; });
+      save(); refreshDatalists(); render();
+    }
+  });
+
+  document.querySelectorAll("thead th[data-sort]").forEach(function (th) {
+    th.addEventListener("click", function () {
+      var key = th.getAttribute("data-sort");
+      if (sortKey === key) sortDir = -sortDir;
+      else { sortKey = key; sortDir = (key === "quality" || key === "isDefault") ? -1 : 1; }
+      render();
+    });
+  });
+
+  $("search").addEventListener("input", render);
+  $("filterQuality").addEventListener("change", render);
+  $("filterDefault").addEventListener("change", render);
+  $("recBtn").addEventListener("click", recommend);
+  $("exportBtn").addEventListener("click", exportCSV);
+  $("clearAll").addEventListener("click", function (ev) {
+    ev.preventDefault();
+    if (!entries.length) return;
+    if (confirm("Delete ALL " + entries.length + " logged combinations? This can't be undone.")) {
+      entries = []; save(); refreshDatalists(); render();
+    }
+  });
+
+  /* ---------- boot ---------- */
+  initTheme();
+  refreshDatalists();
+  render();
+})();
+</script>
+</body>
+</html>
