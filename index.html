@@ -339,6 +339,21 @@
   #lightbox { align-items: center; justify-content: center; padding: 20px; }
   #lightbox img { max-width: 100%; max-height: 88vh; border-radius: 12px; box-shadow: var(--shadow); }
 
+  /* crop modal */
+  #cropModal { align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+  .crop-sheet { background: var(--panel); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; width: 100%; max-width: 440px; text-align: center; }
+  .crop-stage { position: relative; display: inline-block; line-height: 0; max-width: 100%; margin-top: 4px; touch-action: none; user-select: none; }
+  #cropImg { max-width: 100%; max-height: 58vh; display: block; border-radius: 8px; -webkit-user-drag: none; }
+  .crop-box { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); box-sizing: border-box; cursor: move; }
+  .crop-h { position: absolute; width: 22px; height: 22px; background: var(--accent); border: 2px solid #fff; border-radius: 50%; box-sizing: border-box; }
+  .crop-h.tl { left: -11px; top: -11px; cursor: nwse-resize; }
+  .crop-h.tr { right: -11px; top: -11px; cursor: nesw-resize; }
+  .crop-h.bl { left: -11px; bottom: -11px; cursor: nesw-resize; }
+  .crop-h.br { right: -11px; bottom: -11px; cursor: nwse-resize; }
+  .crop-hint { text-align: center; color: var(--muted); font-size: 12px; margin: 12px 0 4px; }
+  .crop-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .crop-actions .btn { flex: 1; }
+
   /* app footer */
   .app-footer { text-align: center; margin: 30px 0 8px; color: var(--muted); }
   .app-footer .mwl { font-family: Georgia, serif; font-size: 13px; }
@@ -724,6 +739,25 @@
 
 <!-- Lightbox -->
 <div class="backdrop" id="lightbox" hidden><img id="lightboxImg" alt="Writing sample" /></div>
+
+<!-- Crop modal -->
+<div class="backdrop" id="cropModal" hidden>
+  <div class="crop-sheet">
+    <div class="sheet-head"><h2 class="serif">Crop photo</h2><button class="x-btn" id="cropClose" title="Cancel">×</button></div>
+    <div class="crop-stage" id="cropStage">
+      <img id="cropImg" alt="Crop preview" draggable="false" />
+      <div class="crop-box" id="cropBox">
+        <span class="crop-h tl" data-corner="tl"></span><span class="crop-h tr" data-corner="tr"></span>
+        <span class="crop-h bl" data-corner="bl"></span><span class="crop-h br" data-corner="br"></span>
+      </div>
+    </div>
+    <p class="crop-hint">Drag the box to move, drag a corner to resize.</p>
+    <div class="crop-actions">
+      <button class="btn ghost" id="cropSkip" type="button">Use full photo</button>
+      <button class="btn" id="cropApply" type="button">Use crop</button>
+    </div>
+  </div>
+</div>
 
 <!-- Profile modal -->
 <div class="backdrop" id="modal" hidden style="align-items:center;justify-content:center;padding:16px">
@@ -1251,6 +1285,80 @@
     if (pendingPhoto) { $("photoImg").src = pendingPhoto; $("photoStatus").textContent = ""; }
   }
 
+  /* ---------- photo crop ---------- */
+  var cropState = { box: { x: 0, y: 0, w: 0, h: 0 }, drag: null, url: null };
+  function openCropper(file) {
+    if (cropState.url) { URL.revokeObjectURL(cropState.url); }
+    var url = URL.createObjectURL(file); cropState.url = url;
+    var img = $("cropImg");
+    img.onload = function () {
+      $("cropModal").hidden = false;
+      var iw = img.clientWidth, ih = img.clientHeight; // reading layout forces a reflow, so sizes are ready
+      cropState.box = { x: iw * 0.08, y: ih * 0.08, w: iw * 0.84, h: ih * 0.84 };
+      renderCropBox();
+    };
+    img.onerror = function () { closeCropper(); $("photoStatus").textContent = "Could not read that image."; };
+    img.src = url;
+  }
+  function closeCropper() {
+    $("cropModal").hidden = true;
+    if (cropState.url) { URL.revokeObjectURL(cropState.url); cropState.url = null; }
+  }
+  function renderCropBox() {
+    var b = cropState.box, s = $("cropBox").style;
+    s.left = b.x + "px"; s.top = b.y + "px"; s.width = b.w + "px"; s.height = b.h + "px";
+  }
+  function clampBox() {
+    var img = $("cropImg"), iw = img.clientWidth, ih = img.clientHeight, b = cropState.box, min = 40;
+    b.w = Math.max(min, Math.min(b.w, iw)); b.h = Math.max(min, Math.min(b.h, ih));
+    b.x = Math.max(0, Math.min(b.x, iw - b.w)); b.y = Math.max(0, Math.min(b.y, ih - b.h));
+  }
+  function initCropEvents() {
+    var stage = $("cropStage");
+    stage.addEventListener("pointerdown", function (e) {
+      var handle = e.target.closest(".crop-h");
+      if (!handle && e.target !== $("cropBox") && !$("cropBox").contains(e.target)) return;
+      e.preventDefault();
+      try { stage.setPointerCapture(e.pointerId); } catch (x) {}
+      cropState.drag = {
+        mode: handle ? "resize" : "move",
+        corner: handle ? handle.getAttribute("data-corner") : null,
+        sx: e.clientX, sy: e.clientY,
+        start: { x: cropState.box.x, y: cropState.box.y, w: cropState.box.w, h: cropState.box.h }
+      };
+    });
+    stage.addEventListener("pointermove", function (e) {
+      var d = cropState.drag; if (!d) return;
+      e.preventDefault();
+      var dx = e.clientX - d.sx, dy = e.clientY - d.sy, st = d.start, b = cropState.box, min = 40;
+      if (d.mode === "move") { b.x = st.x + dx; b.y = st.y + dy; }
+      else {
+        var right = st.x + st.w, bottom = st.y + st.h;
+        if (d.corner === "tl") { b.x = Math.min(st.x + dx, right - min); b.w = right - b.x; b.y = Math.min(st.y + dy, bottom - min); b.h = bottom - b.y; }
+        else if (d.corner === "tr") { b.w = Math.max(min, st.w + dx); b.y = Math.min(st.y + dy, bottom - min); b.h = bottom - b.y; }
+        else if (d.corner === "bl") { b.x = Math.min(st.x + dx, right - min); b.w = right - b.x; b.h = Math.max(min, st.h + dy); }
+        else { b.w = Math.max(min, st.w + dx); b.h = Math.max(min, st.h + dy); }
+      }
+      clampBox(); renderCropBox();
+    });
+    function end(e) { if (cropState.drag) { cropState.drag = null; try { stage.releasePointerCapture(e.pointerId); } catch (x) {} } }
+    stage.addEventListener("pointerup", end);
+    stage.addEventListener("pointercancel", end);
+  }
+  function cropToDataURL(useFull) {
+    var img = $("cropImg");
+    var sx = img.naturalWidth / img.clientWidth, sy = img.naturalHeight / img.clientHeight;
+    var b = useFull ? { x: 0, y: 0, w: img.clientWidth, h: img.clientHeight } : cropState.box;
+    var cx = b.x * sx, cy = b.y * sy, cw = b.w * sx, ch = b.h * sy;
+    var max = 900, ow = cw, oh = ch;
+    if (ow > oh && ow > max) { oh = oh * max / ow; ow = max; }
+    else if (oh >= ow && oh > max) { ow = ow * max / oh; oh = max; }
+    ow = Math.max(1, Math.round(ow)); oh = Math.max(1, Math.round(oh));
+    var c = document.createElement("canvas"); c.width = ow; c.height = oh;
+    c.getContext("2d").drawImage(img, cx, cy, cw, ch, 0, 0, ow, oh);
+    try { return c.toDataURL("image/jpeg", 0.6); } catch (e) { return null; }
+  }
+
   /* ---------- export / import ---------- */
   function downloadBlob(content, filename, type) {
     var blob = new Blob([content], { type: type }), url = URL.createObjectURL(blob), a = document.createElement("a");
@@ -1400,11 +1508,15 @@
   $("photoBtn").addEventListener("click", function () { $("photoInput").click(); });
   $("photoInput").addEventListener("change", function (ev) {
     var f = ev.target.files && ev.target.files[0]; if (!f) return;
-    $("photoStatus").textContent = "Processing…";
-    compressImage(f, function (data) { if (data) setPendingPhoto(data); else $("photoStatus").textContent = "Could not read that image."; });
+    openCropper(f);
     ev.target.value = "";
   });
   $("photoRemove").addEventListener("click", function () { setPendingPhoto(null); });
+  initCropEvents();
+  $("cropApply").addEventListener("click", function () { var d = cropToDataURL(false); if (d) setPendingPhoto(d); closeCropper(); });
+  $("cropSkip").addEventListener("click", function () { var d = cropToDataURL(true); if (d) setPendingPhoto(d); closeCropper(); });
+  $("cropClose").addEventListener("click", closeCropper);
+  $("cropModal").addEventListener("click", function (e) { if (e.target === $("cropModal")) closeCropper(); });
 
   // sort menu
   function updateSortMenuActive() {
