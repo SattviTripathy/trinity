@@ -156,10 +156,9 @@
     position: relative; display: flex; align-items: stretch; background: var(--panel); border: 1px solid var(--line);
     border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
   }
-  .card-body { flex: 1; min-width: 0; display: flex; gap: 10px; padding: 14px 12px 14px 20px; }
-  .card-main { position: relative; flex: 1; min-width: 0; }
-  .card-photo { flex: none; align-self: flex-start; }
-  .card-photo img { width: 60px; height: 60px; object-fit: cover; border-radius: 9px; border: 1px solid var(--line); cursor: pointer; display: block; }
+  .card-body { position: relative; flex: 1; min-width: 0; padding: 14px 14px 14px 20px; }
+  .card-thumb { margin-top: 10px; }
+  .card-thumb img { width: 64px; height: 64px; object-fit: cover; border-radius: 9px; border: 1px solid var(--line); cursor: pointer; display: block; background: var(--bg); }
   .card::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 1.5px; background: var(--margin-red); opacity: .5; z-index: 1; }
   .exp-band { flex: none; width: 34px; display: flex; align-items: center; justify-content: center; }
   .exp-band span { writing-mode: vertical-rl; text-orientation: mixed; font-weight: 700; font-size: 12px; letter-spacing: .6px; white-space: nowrap; }
@@ -251,12 +250,11 @@
   .inv-cat .c { color: var(--muted); font-weight: 400; font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
   .inv-items { display: grid; grid-template-columns: 1fr; gap: 8px; }
   @media (min-width: 620px) { .inv-items { grid-template-columns: 1fr 1fr; } }
-  .inv-item { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 11px 42px 11px 13px; box-shadow: var(--shadow); }
+  .inv-item { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 11px 78px 11px 13px; box-shadow: var(--shadow); }
+  .inv-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
   .inv-name { font-weight: 600; font-size: 15px; }
   .badge-untried { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 700; color: var(--margin-red); border: 1px solid var(--margin-red); border-radius: 999px; padding: 1px 8px; vertical-align: middle; }
   .inv-notes { font-size: 13px; color: var(--muted); margin-top: 4px; }
-  .inv-item .del { position: absolute; top: 8px; right: 8px; background: transparent; border: 1px solid var(--line); border-radius: 8px; width: 30px; height: 30px; color: var(--muted); cursor: pointer; font-size: 13px; }
-  .inv-item .del:active { color: var(--bad); border-color: var(--bad); }
   .seg-cat { display: flex; width: 100%; }
   .seg-cat button { flex: 1; padding: 10px 4px; }
 
@@ -547,9 +545,7 @@
   <section class="view" id="viewFaq" hidden>
     <div class="view-head"><div class="view-title serif"><svg class="title-icon"><use href="#i-faq"/></svg> FAQ</div></div>
 
-    <details class="faq"><summary>What is Trinity?</summary><div class="faq-body">A log for your fountain-pen combinations. Its heart is the trinity of <strong>pen, ink and paper</strong>. Record each combination, rate the experience and add notes, and over time it becomes your personal reference for what writes well together.</div></details>
-    <details class="faq"><summary>Is my data private?</summary><div class="faq-body">Yes. Everything is saved only in this browser on this device. Nothing is uploaded, and there is no account or server.</div></details>
-    <details class="faq"><summary>How do I back up or move my data?</summary><div class="faq-body">Open the <strong>⋯</strong> menu on the log. <strong>Backup</strong> saves a file with all your entries, photos and inventory. <strong>Import</strong> loads it back on another device. <strong>Export CSV</strong> gives a spreadsheet copy of the log.</div></details>
+    <details class="faq"><summary>What is Trinity?</summary><div class="faq-body">Trinity is a log register for your writing preferences — your pens, inks and papers, and most importantly the symphony brought by combining all three. Those three are the major factors shaping every writing experience. Record a combination, rate it, add notes, and Trinity becomes your personal reference for what writes well together.</div></details>
     <details class="faq"><summary>How do I install it on my phone?</summary><div class="faq-body">
       Trinity is a PWA, so it installs straight from the browser and then opens in its own window and works offline.
       <p style="margin:10px 0 4px;color:var(--ink);font-weight:600">On Android (Chrome)</p>
@@ -568,8 +564,7 @@
       </ol>
     </div></details>
     <details class="faq"><summary>My pen or ink is from a small maker. Will it work?</summary><div class="faq-body">Just type the full name. The suggestions only save keystrokes for common brands. Anything you type is accepted and remembered for next time.</div></details>
-    <details class="faq"><summary>How do I add a photo?</summary><div class="faq-body">In the add sheet, tap <strong>Add photo</strong>. On a phone this can open the camera. The image is shrunk on your device before it is saved, so it stays small.</div></details>
-    <details class="faq"><summary>What is the Inventory tab?</summary><div class="faq-body">A list of the pens, inks, notebooks and papers you own. Whenever you log a combination, any new pen, ink or paper is added here automatically. Your items feed the autofill suggestions across the app, and anything you own but have not paired yet is tagged <strong>untried</strong>, so it doubles as a to-try list. New papers land under Papers, since the log does not split notebooks from loose paper.</div></details>
+    <details class="faq"><summary>How do I back up or move my data?</summary><div class="faq-body">Open the <strong>⋯</strong> menu on the log. <strong>Backup</strong> saves a file with all your entries, photos and inventory. <strong>Import</strong> loads it back on another device. <strong>Export CSV</strong> gives a spreadsheet copy of the log and inventory.</div></details>
 
     <div class="geek-head"><svg class="nibmark"><use href="#i-nib"/></svg> For the geeks</div>
 
@@ -584,8 +579,9 @@
       </ol>
       Mark nothing as had and all three as found to see your best combinations overall. Nibs are pooled, since they belong to the pen. The more you log, the sharper it gets.
     </div></details>
-    <details class="faq"><summary>Where is my data stored?</summary><div class="faq-body">Entries live in <code>localStorage</code> under <code>trinity.entries.v1</code> as a JSON array, with photos held as small compressed data inside each entry. Profile and theme are stored the same way. Backup exports that JSON, and Import replaces the current entries with it.</div></details>
     <details class="faq"><summary>How do offline and install work?</summary><div class="faq-body">A service worker caches the app on first load, so Trinity opens with no connection. A new version is fetched in the background and applies on your next visit.</div></details>
+    <details class="faq"><summary>Where is my data stored?</summary><div class="faq-body">Your log, inventory, profile and theme live in <code>localStorage</code> as JSON. Photos are kept separately in <code>IndexedDB</code>, which has far more room, so images never crowd out the rest of your data. Backup bundles everything (including photos) into one file; Import restores it.</div></details>
+    <details class="faq"><summary>Is my data private?</summary><div class="faq-body">Yes. Everything is saved only in this browser on this device. Nothing is uploaded, and there is no account or server.</div></details>
 
     <div class="privacy-line">Everything stays in this browser. Nothing is uploaded. · <a href="#" id="clearAll">Clear all data</a></div>
   </section>
@@ -623,14 +619,14 @@
       <div class="form-grid">
         <div class="pengroup">
           <div class="pgtag"><svg class="nibmark"><use href="#i-nib"/></svg> The pen</div>
-          <div><label for="pen">Pen</label><input type="text" id="pen" list="penList" placeholder="e.g. Ranga Model 3" required /></div>
+          <div><label for="pen">Pen</label><input type="text" id="pen" list="penList" placeholder="e.g. Ranga Model 3" autocapitalize="words" required /></div>
           <div><label for="nib">Nib <span class="hint">(part of this pen)</span></label>
             <select id="nib"></select>
           </div>
           <div class="full nibother" id="nibOtherWrap" hidden><label for="nibOther">Your nib</label><input type="text" id="nibOther" placeholder="Describe your special nib" /></div>
         </div>
-        <div class="full"><label for="ink">Ink</label><input type="text" id="ink" list="inkList" placeholder="e.g. Krishna Sea at Night" required /></div>
-        <div class="full"><label for="paper">Paper</label><input type="text" id="paper" list="paperList" placeholder="e.g. JK Paper 100gsm" required /></div>
+        <div class="full"><label for="ink">Ink</label><input type="text" id="ink" list="inkList" placeholder="e.g. Krishna Sea at Night" autocapitalize="words" required /></div>
+        <div class="full"><label for="paper">Paper</label><input type="text" id="paper" list="paperList" placeholder="e.g. JK Paper 100gsm" autocapitalize="words" required /></div>
         <div><label for="experience">Experience</label>
           <select id="experience">
             <option value="1">Poor</option><option value="2">Fair</option>
@@ -661,7 +657,7 @@
   <div class="sheet">
     <div class="grabber"></div>
     <div class="sheet-head">
-      <h2 class="serif"><svg class="nibmark" style="width:16px;height:16px"><use href="#i-box"/></svg> Add to inventory</h2>
+      <h2 class="serif"><svg class="nibmark" style="width:16px;height:16px"><use href="#i-box"/></svg> <span id="invSheetTitle">Add to inventory</span></h2>
       <button class="x-btn" id="invClose" title="Close">×</button>
     </div>
     <form id="invForm" autocomplete="off">
@@ -675,9 +671,9 @@
             <button type="button" data-cat="paper">Paper</button>
           </div>
         </div>
-        <div class="full"><label for="invName">Name</label><input type="text" id="invName" list="penList" placeholder="e.g. Lamy 2000" required /></div>
+        <div class="full"><label for="invName">Name</label><input type="text" id="invName" list="penList" placeholder="e.g. Lamy 2000" autocapitalize="words" required /></div>
         <div class="full"><label for="invNotes">Notes <span class="hint">(optional)</span></label><textarea id="invNotes" placeholder="Colour, nib, where you got it…"></textarea></div>
-        <button class="btn block full" type="submit">Add to inventory</button>
+        <button class="btn block full" type="submit" id="invSubmitBtn">Add to inventory</button>
       </div>
     </form>
   </div>
@@ -752,6 +748,7 @@
       </div>
     </div>
     <p class="crop-hint">Drag the box to move, drag a corner to resize.</p>
+    <button class="btn ghost" id="cropRotate" type="button" style="width:100%;margin-top:2px">⟳ Rotate</button>
     <div class="crop-actions">
       <button class="btn ghost" id="cropSkip" type="button">Use full photo</button>
       <button class="btn" id="cropApply" type="button">Use crop</button>
@@ -763,10 +760,10 @@
 <div class="backdrop" id="modal" hidden style="align-items:center;justify-content:center;padding:16px">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <h3 id="modalTitle" class="serif"><svg class="logo"><use href="#i-nib"/></svg> Welcome to Trinity</h3>
-    <label for="mName">Name</label>
-    <input type="text" id="mName" placeholder="Your name" maxlength="40" />
-    <label for="mQuote" style="margin-top:12px">A short quote or flair</label>
-    <input type="text" id="mQuote" placeholder="e.g. Ink first, decisions later" maxlength="80" />
+    <label for="mName">Your Name</label>
+    <input type="text" id="mName" placeholder="Ashok Kumar" maxlength="40" autocapitalize="words" />
+    <label for="mQuote" style="margin-top:12px">A short code</label>
+    <input type="text" id="mQuote" placeholder="To thine own self be true" maxlength="80" />
     <div class="modal-actions">
       <button class="btn ghost" id="mSkip" type="button">Skip</button>
       <button class="btn" id="mSave" type="button">Save</button>
@@ -888,6 +885,7 @@
   var pendingPhoto = null; // dataURL for the add form
   var editingId = null;    // id of the log entry being edited, or null for a new one
   var invCat = "pen";      // current add-sheet category
+  var invEditingId = null; // id of inventory item being edited, or null
   var currentViewName = "log";
 
   var $ = function (id) { return document.getElementById(id); };
@@ -919,6 +917,45 @@
   }
   function save() {
     localStorage.setItem(STORE_KEY, JSON.stringify(entries)); // may throw QuotaExceededError; callers handle
+  }
+
+  /* ---------- photo storage (IndexedDB) ---------- */
+  // Photos are kept in IndexedDB (large quota) keyed by entry id; entry.photo holds "idb"
+  // (or, only as a fallback when IndexedDB is unavailable, an inline data: URL).
+  var idbDB = null, idbAvailable = false;
+  function idbOpen() {
+    return new Promise(function (resolve) {
+      try {
+        var r = indexedDB.open("trinity", 1);
+        r.onupgradeneeded = function () { try { r.result.createObjectStore("photos"); } catch (e) {} };
+        r.onsuccess = function () { idbDB = r.result; idbAvailable = true; resolve(); };
+        r.onerror = function () { idbAvailable = false; resolve(); };
+      } catch (e) { idbAvailable = false; resolve(); }
+    });
+  }
+  function idbPut(id, val) { return new Promise(function (res, rej) { try { var tx = idbDB.transaction("photos", "readwrite"); tx.objectStore("photos").put(val, id); tx.oncomplete = function () { res(); }; tx.onerror = function () { rej(tx.error); }; } catch (e) { rej(e); } }); }
+  function idbGet(id) { return new Promise(function (res) { try { var tx = idbDB.transaction("photos", "readonly"); var q = tx.objectStore("photos").get(id); q.onsuccess = function () { res(q.result || null); }; q.onerror = function () { res(null); }; } catch (e) { res(null); } }); }
+  function idbDel(id) { return new Promise(function (res) { try { var tx = idbDB.transaction("photos", "readwrite"); tx.objectStore("photos").delete(id); tx.oncomplete = function () { res(); }; tx.onerror = function () { res(); }; } catch (e) { res(); } }); }
+  function idbClear() { return new Promise(function (res) { try { var tx = idbDB.transaction("photos", "readwrite"); tx.objectStore("photos").clear(); tx.oncomplete = function () { res(); }; tx.onerror = function () { res(); }; } catch (e) { res(); } }); }
+  function getPhoto(e) {
+    if (!e || !e.photo) return Promise.resolve(null);
+    if (e.photo.indexOf("data:") === 0) return Promise.resolve(e.photo);
+    if (e.photo === "idb" && idbAvailable) return idbGet(e.id);
+    return Promise.resolve(null);
+  }
+  function migratePhotos() {
+    if (!idbAvailable) return Promise.resolve();
+    var pend = entries.filter(function (e) { return e.photo && e.photo.indexOf("data:") === 0; });
+    if (!pend.length) return Promise.resolve();
+    return Promise.all(pend.map(function (e) { return idbPut(e.id, e.photo).then(function () { e.photo = "idb"; }).catch(function () {}); }))
+      .then(function () { try { save(); } catch (e) {} });
+  }
+  function loadCardPhotos() {
+    document.querySelectorAll("#logList img[data-photo-id]").forEach(function (img) {
+      var id = img.getAttribute("data-photo-id");
+      var e = entries.find(function (x) { return x.id === id; });
+      getPhoto(e).then(function (url) { if (url) img.src = url; });
+    });
   }
 
   /* ---------- theme ---------- */
@@ -1051,27 +1088,25 @@
     $("logList").innerHTML = rows.map(function (e) {
       var qn = Number(e.experience) || 3;
       var abbr = e.nib ? ' <span class="nib-abbr" title="' + esc(e.nib) + '">(' + esc(abbrevNib(e.nib)) + ')</span>' : '';
-      var thumb = e.photo ? '<div class="card-photo"><img src="' + e.photo + '" data-photo="' + e.id + '" alt="Writing sample" loading="lazy"/></div>' : '';
+      var thumb = e.photo ? '<div class="card-thumb"><img data-photo-id="' + e.id + '" data-photo="' + e.id + '" alt="Writing sample" loading="lazy"/></div>' : '';
       var comment = e.comments ? '<div class="comment">' + esc(e.comments) + '</div>' : '';
       return '<div class="card">' +
         '<div class="card-body">' +
-          '<div class="card-main">' +
-            '<div class="card-actions">' +
-            '<button class="icon-sm edit" data-edit="' + e.id + '" title="Edit" aria-label="Edit entry"><svg class="mini"><use href="#i-edit"/></svg></button>' +
-            '<button class="icon-sm del" data-del="' + e.id + '" title="Delete" aria-label="Delete entry">✕</button>' +
-            '</div>' +
-            '<div class="pen"><svg class="nibmark"><use href="#i-nib"/></svg><span class="pen-name">' + esc(e.pen) + abbr + '</span></div>' +
-            '<div class="combo">' +
-              '<span class="ci"><svg class="cicon"><use href="#i-inkbottle"/></svg>' + esc(e.ink) + '</span>' +
-              '<span class="ci"><svg class="cicon"><use href="#i-paper"/></svg>' + esc(e.paper) + '</span>' +
-            '</div>' +
-            comment +
+          '<div class="card-actions">' +
+          '<button class="icon-sm edit" data-edit="' + e.id + '" title="Edit" aria-label="Edit entry"><svg class="mini"><use href="#i-edit"/></svg></button>' +
+          '<button class="icon-sm del" data-del="' + e.id + '" title="Delete" aria-label="Delete entry">✕</button>' +
           '</div>' +
-          thumb +
+          '<div class="pen"><svg class="nibmark"><use href="#i-nib"/></svg><span class="pen-name">' + esc(e.pen) + abbr + '</span></div>' +
+          '<div class="combo">' +
+            '<span class="ci"><svg class="cicon"><use href="#i-inkbottle"/></svg>' + esc(e.ink) + '</span>' +
+            '<span class="ci"><svg class="cicon"><use href="#i-paper"/></svg>' + esc(e.paper) + '</span>' +
+          '</div>' +
+          comment + thumb +
         '</div>' +
         '<div class="exp-band q' + qn + '" title="Experience: ' + EXP_WORDS[qn] + '"><span>' + EXP_WORDS[qn] + '</span></div>' +
         '</div>';
     }).join("");
+    loadCardPhotos();
 
     $("emptyState").hidden = entries.length !== 0;
     $("logList").hidden = entries.length === 0;
@@ -1211,7 +1246,9 @@
       return '<div class="inv-group"><div class="inv-cat"><svg class="nibmark" style="width:14px;height:16px;color:var(--accent)"><use href="#' + (cat === "pen" ? "i-nib" : icon) + '"/></svg>' + CAT_LABEL[cat] + ' <span class="c">' + list.length + '</span></div><div class="inv-items">' +
         list.map(function (it) {
           var untried = isUntried(it, used);
-          return '<div class="inv-item"><button class="del" data-invdel="' + it.id + '" title="Delete">✕</button>' +
+          return '<div class="inv-item"><div class="inv-actions">' +
+            '<button class="icon-sm edit" data-invedit="' + it.id + '" title="Edit" aria-label="Edit item"><svg class="mini"><use href="#i-edit"/></svg></button>' +
+            '<button class="icon-sm del" data-invdel="' + it.id + '" title="Delete" aria-label="Delete item">✕</button></div>' +
             '<div class="inv-main"><span class="inv-name">' + esc(it.name) + '</span>' + (untried ? '<span class="badge-untried">untried</span>' : '') + '</div>' +
             (it.notes ? '<div class="inv-notes">' + esc(it.notes) + '</div>' : '') + '</div>';
         }).join("") + '</div></div>';
@@ -1231,8 +1268,20 @@
     var map = { pen: ["penList", "e.g. Lamy 2000"], ink: ["inkList", "e.g. Iroshizuku Kon-peki"], notebook: ["paperList", "e.g. Leuchtturm1917"], paper: ["paperList", "e.g. Rhodia 80gsm"] };
     input.setAttribute("list", map[cat][0]); input.placeholder = map[cat][1];
   }
-  function openInvSheet() { $("invSheet").hidden = false; setTimeout(function () { $("invName").focus(); }, 40); }
-  function closeInvSheet() { $("invSheet").hidden = true; }
+  function openInvSheet() {
+    invEditingId = null;
+    $("invSheetTitle").textContent = "Add to inventory"; $("invSubmitBtn").textContent = "Add to inventory";
+    setInvCat("pen"); $("invName").value = ""; $("invNotes").value = "";
+    $("invSheet").hidden = false; setTimeout(function () { $("invName").focus(); }, 40);
+  }
+  function openInvEdit(id) {
+    var it = inventory.find(function (x) { return x.id === id; }); if (!it) return;
+    invEditingId = id;
+    setInvCat(it.category || "pen"); $("invName").value = it.name || ""; $("invNotes").value = it.notes || "";
+    $("invSheetTitle").textContent = "Edit item"; $("invSubmitBtn").textContent = "Save changes";
+    $("invSheet").hidden = false; setTimeout(function () { $("invNotes").focus(); }, 40);
+  }
+  function closeInvSheet() { $("invSheet").hidden = true; invEditingId = null; }
 
   function initInv() {
     document.querySelectorAll("#invCatSeg button").forEach(function (b) {
@@ -1242,13 +1291,21 @@
     $("invForm").addEventListener("submit", function (ev) {
       ev.preventDefault();
       var name = $("invName").value.trim(); if (!name) return;
-      var item = { id: uid(), category: invCat, name: name, notes: $("invNotes").value.trim(), created: Date.now() };
-      inventory.push(item);
-      try { saveInv(); } catch (err) { inventory.pop(); alert("Storage is full. Back up and clear some data, then try again."); return; }
+      var notes = $("invNotes").value.trim();
+      if (invEditingId) {
+        var it = inventory.find(function (x) { return x.id === invEditingId; });
+        if (it) { it.category = invCat; it.name = name; it.notes = notes; try { saveInv(); } catch (e) {} }
+      } else {
+        var item = { id: uid(), category: invCat, name: name, notes: notes, created: Date.now() };
+        inventory.push(item);
+        try { saveInv(); } catch (err) { inventory.pop(); alert("Storage is full. Back up and clear some data, then try again."); return; }
+      }
       $("invName").value = ""; $("invNotes").value = "";
       closeInvSheet(); refreshDatalists(); renderInv();
     });
     $("invList").addEventListener("click", function (ev) {
+      var editBtn = ev.target.closest("[data-invedit]");
+      if (editBtn) { openInvEdit(editBtn.getAttribute("data-invedit")); return; }
       var btn = ev.target.closest("[data-invdel]"); if (!btn) return;
       var id = btn.getAttribute("data-invdel");
       var it = inventory.find(function (x) { return x.id === id; });
@@ -1358,6 +1415,20 @@
     c.getContext("2d").drawImage(img, cx, cy, cw, ch, 0, 0, ow, oh);
     try { return c.toDataURL("image/jpeg", 0.6); } catch (e) { return null; }
   }
+  function rotateCropImage() {
+    var img = $("cropImg");
+    if (!img.naturalWidth) return;
+    var c = document.createElement("canvas"); c.width = img.naturalHeight; c.height = img.naturalWidth;
+    var ctx = c.getContext("2d");
+    ctx.translate(c.width / 2, c.height / 2); ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    img.onload = function () {
+      var iw = img.clientWidth, ih = img.clientHeight;
+      cropState.box = { x: iw * 0.08, y: ih * 0.08, w: iw * 0.84, h: ih * 0.84 };
+      renderCropBox();
+    };
+    try { img.src = c.toDataURL("image/png"); } catch (e) {}
+  }
 
   /* ---------- export / import ---------- */
   function downloadBlob(content, filename, type) {
@@ -1389,8 +1460,13 @@
   function csvCell(v) { v = String(v == null ? "" : v); if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"'; return v; }
   function exportJSON() {
     if (!entries.length && !inventory.length) { alert("Nothing to back up yet."); return; }
-    var stamp = new Date().toISOString().slice(0, 10);
-    downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: entries, inventory: inventory }, null, 2), "trinity-backup-" + stamp + ".json", "application/json");
+    // Inline each entry's photo (from IndexedDB) so the backup file is self-contained.
+    Promise.all(entries.map(function (e) {
+      return getPhoto(e).then(function (url) { var c = Object.assign({}, e); c.photo = url || ""; return c; });
+    })).then(function (outEntries) {
+      var stamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(JSON.stringify({ app: "Trinity", version: 1, exported: new Date().toISOString(), entries: outEntries, inventory: inventory }, null, 2), "trinity-backup-" + stamp + ".json", "application/json");
+    });
   }
   function importJSON(file) {
     var reader = new FileReader();
@@ -1404,9 +1480,15 @@
         var prevE = entries, prevI = inventory;
         entries = list.map(function (e) { return { id: e.id || uid(), pen: e.pen || "", nib: e.nib || "", ink: e.ink || "", paper: e.paper || "", experience: Number(e.experience != null ? e.experience : e.quality) || 3, comments: e.comments || "", photo: e.photo || "", created: e.created || Date.now() }; });
         if (invList) inventory = invList.map(function (it) { return { id: it.id || uid(), category: it.category || "pen", name: it.name || "", notes: it.notes || "", created: it.created || Date.now() }; });
-        try { save(); saveInv(); } catch (err) { entries = prevE; inventory = prevI; alert("Import too large for this browser's storage. Try a backup with fewer photos."); return; }
-        refreshDatalists(); refreshFilterOptions(); render(); renderInv();
-        alert("Imported " + entries.length + " entries" + (invList ? " and " + inventory.length + " inventory items" : "") + ".");
+        // Move any inline photos into IndexedDB, then persist the small entries.
+        var movePhotos = idbAvailable
+          ? Promise.all(entries.map(function (e) { return (e.photo && e.photo.indexOf("data:") === 0) ? idbPut(e.id, e.photo).then(function () { e.photo = "idb"; }).catch(function () {}) : Promise.resolve(); }))
+          : Promise.resolve();
+        movePhotos.then(function () {
+          try { save(); saveInv(); } catch (err) { entries = prevE; inventory = prevI; alert("Import too large for this browser's storage."); return; }
+          refreshDatalists(); refreshFilterOptions(); render(); renderInv();
+          alert("Imported " + entries.length + " entries" + (invList ? " and " + inventory.length + " inventory items" : "") + ".");
+        });
       } catch (err) { alert("Could not read that file: " + err.message); }
     };
     reader.readAsText(file);
@@ -1431,7 +1513,8 @@
     if (!e.nib) { $("nib").value = ""; $("nibOtherWrap").hidden = true; $("nibOther").value = ""; }
     else if (NIBS.indexOf(e.nib) !== -1) { $("nib").value = e.nib; $("nibOtherWrap").hidden = true; $("nibOther").value = ""; }
     else { $("nib").value = "__other"; $("nibOtherWrap").hidden = false; $("nibOther").value = e.nib; }
-    setPendingPhoto(e.photo || null);
+    setPendingPhoto(null);
+    getPhoto(e).then(function (url) { if (editingId === id && url) setPendingPhoto(url); });
     $("addSheetTitle").textContent = "Edit combination";
     $("addSubmitBtn").textContent = "Save changes";
     $("addSheet").hidden = false;
@@ -1456,26 +1539,29 @@
         var old = Object.assign({}, entries[idx]);
         var ed = entries[idx];
         ed.pen = pen; ed.nib = readNib(); ed.ink = ink; ed.paper = paper;
-        ed.experience = Number($("experience").value) || 3; ed.comments = $("comments").value.trim(); ed.photo = pendingPhoto || "";
+        ed.experience = Number($("experience").value) || 3; ed.comments = $("comments").value.trim();
+        ed.photo = pendingPhoto ? (idbAvailable ? "idb" : pendingPhoto) : "";
         try { save(); }
         catch (err) {
-          if (ed.photo) { ed.photo = ""; try { save(); alert("Storage was full, so changes were saved without the photo."); } catch (e2) { entries[idx] = old; try { save(); } catch (_) {} alert("Storage is full. Could not save changes."); return; } }
+          if (ed.photo && ed.photo.indexOf("data:") === 0) { ed.photo = ""; try { save(); alert("Storage was full, so changes were saved without the photo."); } catch (e2) { entries[idx] = old; try { save(); } catch (_) {} alert("Storage is full. Could not save changes."); return; } }
           else { entries[idx] = old; try { save(); } catch (_) {} alert("Storage is full. Could not save changes."); return; }
         }
+        if (idbAvailable) { if (pendingPhoto) idbPut(ed.id, pendingPhoto).catch(function () {}); else idbDel(ed.id); }
         syncInventoryFromEntry(ed);
       }
       resetForm(); closeSheet(); refreshDatalists(); refreshFilterOptions(); render(); renderInv();
       return;
     }
 
-    var entry = { id: uid(), pen: pen, nib: readNib(), ink: ink, paper: paper, experience: Number($("experience").value) || 3, comments: $("comments").value.trim(), photo: pendingPhoto || "", created: Date.now() };
+    var entry = { id: uid(), pen: pen, nib: readNib(), ink: ink, paper: paper, experience: Number($("experience").value) || 3, comments: $("comments").value.trim(), photo: pendingPhoto ? (idbAvailable ? "idb" : pendingPhoto) : "", created: Date.now() };
     entries.push(entry);
     try { save(); }
     catch (err) {
       entries.pop();
-      if (entry.photo) { entry.photo = ""; entries.push(entry); try { save(); alert("Storage was full, so the entry was saved without the photo. Consider Backup to free space."); } catch (e2) { entries.pop(); alert("Storage is full. Back up and clear some entries, then try again."); return; } }
+      if (entry.photo && entry.photo.indexOf("data:") === 0) { entry.photo = ""; entries.push(entry); try { save(); alert("Storage was full, so the entry was saved without the photo."); } catch (e2) { entries.pop(); alert("Storage is full. Back up and clear some entries, then try again."); return; } }
       else { alert("Storage is full. Back up and clear some entries, then try again."); return; }
     }
+    if (pendingPhoto && idbAvailable) idbPut(entry.id, pendingPhoto).catch(function () {});
     syncInventoryFromEntry(entry);
     resetForm(); closeSheet(); refreshDatalists(); refreshFilterOptions(); render(); renderInv();
   });
@@ -1487,7 +1573,7 @@
     if (del) {
       var id = del.getAttribute("data-del"), e = entries.find(function (x) { return x.id === id; });
       var name = e ? (e.pen + " · " + e.ink + " · " + e.paper) : "this entry";
-      if (confirm("Delete " + name + "?")) { entries = entries.filter(function (x) { return x.id !== id; }); try { save(); } catch (er) {} refreshDatalists(); refreshFilterOptions(); render(); }
+      if (confirm("Delete " + name + "?")) { entries = entries.filter(function (x) { return x.id !== id; }); try { save(); } catch (er) {} if (idbAvailable) idbDel(id); refreshDatalists(); refreshFilterOptions(); render(); }
       return;
     }
     var ph = ev.target.closest("[data-photo]");
@@ -1513,6 +1599,7 @@
   });
   $("photoRemove").addEventListener("click", function () { setPendingPhoto(null); });
   initCropEvents();
+  $("cropRotate").addEventListener("click", rotateCropImage);
   $("cropApply").addEventListener("click", function () { var d = cropToDataURL(false); if (d) setPendingPhoto(d); closeCropper(); });
   $("cropSkip").addEventListener("click", function () { var d = cropToDataURL(true); if (d) setPendingPhoto(d); closeCropper(); });
   $("cropClose").addEventListener("click", closeCropper);
@@ -1568,6 +1655,7 @@
     if (confirm("Delete ALL your log entries (" + entries.length + ") and inventory items (" + inventory.length + ")? This cannot be undone. Consider Backup first.")) {
       entries = []; inventory = [];
       try { save(); saveInv(); } catch (e) {}
+      if (idbAvailable) idbClear();
       refreshDatalists(); refreshFilterOptions(); render(); renderInv();
     }
   });
@@ -1575,6 +1663,7 @@
 
   /* ---------- boot ---------- */
   initTheme(); initProfile(); initNav(); initNibSelect(); initRec(); initInv(); refreshDatalists(); refreshFilterOptions(); render(); renderInv();
+  idbOpen().then(migratePhotos).catch(function () {}).then(function () { render(); });
   if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 })();
 </script>
