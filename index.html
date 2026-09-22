@@ -445,7 +445,7 @@
   <!-- ===== LOG VIEW ===== -->
   <section class="view" id="viewLog">
     <div class="view-head">
-      <div class="view-title serif"><svg class="title-icon"><use href="#i-log"/></svg> Your log <span class="count" id="logCount" style="font-size:13px;color:var(--muted);font-weight:400"></span></div>
+      <div class="view-title serif"><svg class="title-icon"><use href="#i-log"/></svg> <span id="logTitle">Your log</span> <span class="count" id="logCount" style="font-size:13px;color:var(--muted);font-weight:400"></span></div>
       <button class="kebab" id="dataBtn" title="Data options">⋯</button>
     </div>
     <div class="toolbar">
@@ -762,7 +762,7 @@
     <h3 id="modalTitle" class="serif"><svg class="logo"><use href="#i-nib"/></svg> Welcome to Trinity</h3>
     <label for="mName">Your Name</label>
     <input type="text" id="mName" placeholder="Ashok Kumar" maxlength="40" autocapitalize="words" />
-    <label for="mQuote" style="margin-top:12px">A short code</label>
+    <label for="mQuote" style="margin-top:12px">A quote you live by</label>
     <input type="text" id="mQuote" placeholder="To thine own self be true" maxlength="80" />
     <div class="modal-actions">
       <button class="btn ghost" id="mSkip" type="button">Skip</button>
@@ -1001,6 +1001,7 @@
     $("profileName").textContent = name || "Set up profile";
     $("profileQuote").textContent = quote; $("profileQuote").style.display = quote ? "block" : "none";
     $("footerName").textContent = name || "you";
+    $("logTitle").textContent = name ? name + "'s logs" : "Your log";
     var ff = $("footerFlair"); ff.textContent = quote; ff.hidden = !quote;
   }
   function openModal() {
