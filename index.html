@@ -1257,11 +1257,26 @@
     a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
   function exportCSV() {
-    if (!entries.length) { alert("Nothing to export yet."); return; }
-    var head = ["Pen", "Nib", "Ink", "Paper", "Experience", "Notes", "Has photo"];
-    var lines = [head.map(csvCell).join(",")];
+    if (!entries.length && !inventory.length) { alert("Nothing to export yet."); return; }
+    var lines = [];
+    // --- Log section ---
+    lines.push(csvCell("Log"));
+    lines.push(["Pen", "Nib", "Ink", "Paper", "Experience", "Notes", "Has photo"].map(csvCell).join(","));
     entries.forEach(function (e) { lines.push([e.pen, e.nib, e.ink, e.paper, EXP_WORDS[Number(e.experience) || 3], e.comments || "", e.photo ? "yes" : "no"].map(csvCell).join(",")); });
-    downloadBlob(lines.join("\r\n"), "trinity-log.csv", "text/csv;charset=utf-8;");
+    // --- blank separator + Inventory section ---
+    lines.push("");
+    lines.push(csvCell("Inventory"));
+    lines.push(["Category", "Name", "Notes", "Status"].map(csvCell).join(","));
+    var used = usedSets();
+    var order = ["pen", "ink", "notebook", "paper"];
+    var catLabel = { pen: "Pen", ink: "Ink", notebook: "Notebook", paper: "Paper" };
+    inventory.slice().sort(function (a, b) {
+      var d = order.indexOf(a.category) - order.indexOf(b.category);
+      return d !== 0 ? d : a.name.localeCompare(b.name);
+    }).forEach(function (it) {
+      lines.push([catLabel[it.category] || it.category, it.name, it.notes || "", isUntried(it, used) ? "Untried" : "Tried"].map(csvCell).join(","));
+    });
+    downloadBlob(lines.join("\r\n"), "trinity-export.csv", "text/csv;charset=utf-8;");
   }
   function csvCell(v) { v = String(v == null ? "" : v); if (/[",\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"'; return v; }
   function exportJSON() {
