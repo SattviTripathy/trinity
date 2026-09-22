@@ -82,7 +82,7 @@
   .brand:active { transform: scale(.97); }
   .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .brand .logo { width: 26px; height: 32px; flex: none; color: var(--accent); }
-  .brand .word { font-family: Georgia, serif; font-size: 22px; font-weight: 600; letter-spacing: .3px; }
+  .brand .word { font-family: Georgia, serif; font-size: 25px; font-weight: 600; letter-spacing: .3px; }
   .header-right { display: flex; align-items: center; gap: 8px; flex: none; }
   .theme-btn {
     border: 1px solid var(--line-strong); background: var(--panel); color: var(--muted);
@@ -114,7 +114,7 @@
   @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
   .view-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 2px 14px; }
-  .view-title { font-family: Georgia, serif; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+  .view-title { font-family: Georgia, serif; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
   .view-title .drop { width: 15px; height: 19px; color: var(--accent); flex: none; }
   .view-title .title-icon { width: 22px; height: 22px; color: var(--accent); flex: none; }
   .view-sub { color: var(--muted); font-size: 13px; margin: -8px 2px 16px; }
@@ -469,7 +469,6 @@
   <!-- ===== INVENTORY VIEW ===== -->
   <section class="view" id="viewInv" hidden>
     <div class="view-head"><div class="view-title serif"><svg class="title-icon"><use href="#i-box"/></svg> Inventory <span class="count" id="invCount" style="font-size:13px;color:var(--muted);font-weight:400"></span></div></div>
-    <p class="view-sub">Everything you own. Your items power the autofill suggestions, and anything you have not paired yet is tagged untried.</p>
     <div class="toolbar">
       <input type="search" id="invSearch" placeholder="Search your inventory…" />
       <div class="row">
@@ -495,7 +494,6 @@
   <!-- ===== RECOMMENDER VIEW ===== -->
   <section class="view" id="viewRec" hidden>
     <div class="view-head"><div class="view-title serif"><svg class="title-icon"><use href="#i-tri"/></svg> Pairing recommender</div></div>
-    <p class="view-sub">You are in the driver's seat. Mark what you already have, and what you want Trinity to find. Fix two corners to find one, or fix one to find a pair.</p>
     <svg class="rec-motif" viewBox="0 0 300 190" aria-hidden="true">
       <path d="M150 22 L268 168 L32 168 Z" fill="none" stroke="var(--line-strong)" stroke-width="2" stroke-linejoin="round"/>
       <circle id="penNode" cx="150" cy="22" r="7" fill="var(--accent)"/>
