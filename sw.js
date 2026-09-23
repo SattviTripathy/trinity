@@ -1,5 +1,5 @@
 /* Trinity service worker: app-shell caching for offline use */
-var CACHE = "trinity-v17";
+var CACHE = "trinity-v18";
 var ASSETS = [
   "./",
   "./index.html",

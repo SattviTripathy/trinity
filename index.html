@@ -1323,20 +1323,26 @@
   }
 
   /* ---------- photo ---------- */
-  function compressImage(file, cb) {
-    var img = new Image(), url = URL.createObjectURL(file);
-    img.onload = function () {
-      var max = 900, w = img.width, h = img.height;
-      if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
-      else if (h >= w && h > max) { w = Math.round(w * max / h); h = max; }
-      var c = document.createElement("canvas"); c.width = w; c.height = h;
-      c.getContext("2d").drawImage(img, 0, 0, w, h);
-      var data;
-      try { data = c.toDataURL("image/jpeg", 0.6); } catch (e) { data = null; }
-      URL.revokeObjectURL(url); cb(data);
-    };
-    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
-    img.src = url;
+  // Decode the original once and hand back a small JPEG data URL. A phone camera
+  // photo is 12MP+; holding that decoded (or PNG-encoding it) blows up memory on
+  // low-RAM devices, so we downscale up front and release the full image at once.
+  function decodeScaled(file, maxDim) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        var s = Math.min(1, maxDim / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * s)), ch = Math.max(1, Math.round(h * s));
+        var c = document.createElement("canvas"); c.width = cw; c.height = ch;
+        c.getContext("2d").drawImage(img, 0, 0, cw, ch);
+        URL.revokeObjectURL(url); img.src = "";            // drop the full-size decode now
+        var data; try { data = c.toDataURL("image/jpeg", 0.72); } catch (e) { data = null; }
+        c.width = c.height = 0;                            // help the canvas memory go too
+        if (data) resolve(data); else reject();
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
   }
   function setPendingPhoto(data) {
     pendingPhoto = data || null;
@@ -1346,10 +1352,9 @@
 
   /* ---------- photo crop ---------- */
   var cropState = { box: { x: 0, y: 0, w: 0, h: 0 }, drag: null, url: null };
-  function openCropper(file) {
-    if (cropState.url) { URL.revokeObjectURL(cropState.url); }
-    var url = URL.createObjectURL(file); cropState.url = url;
-    var img = $("cropImg");
+  function openCropper(src) {
+    if (cropState.url) { URL.revokeObjectURL(cropState.url); cropState.url = null; }
+    var img = $("cropImg");                               // src is an already-downscaled JPEG data URL
     img.onload = function () {
       $("cropModal").hidden = false;
       var iw = img.clientWidth, ih = img.clientHeight; // reading layout forces a reflow, so sizes are ready
@@ -1357,7 +1362,7 @@
       renderCropBox();
     };
     img.onerror = function () { closeCropper(); $("photoStatus").textContent = "Could not read that image."; };
-    img.src = url;
+    img.src = src;
   }
   function closeCropper() {
     $("cropModal").hidden = true;
@@ -1415,7 +1420,9 @@
     ow = Math.max(1, Math.round(ow)); oh = Math.max(1, Math.round(oh));
     var c = document.createElement("canvas"); c.width = ow; c.height = oh;
     c.getContext("2d").drawImage(img, cx, cy, cw, ch, 0, 0, ow, oh);
-    try { return c.toDataURL("image/jpeg", 0.6); } catch (e) { return null; }
+    var out; try { out = c.toDataURL("image/jpeg", 0.6); } catch (e) { out = null; }
+    c.width = c.height = 0;
+    return out;
   }
   function rotateCropImage() {
     var img = $("cropImg");
@@ -1429,7 +1436,9 @@
       cropState.box = { x: iw * 0.08, y: ih * 0.08, w: iw * 0.84, h: ih * 0.84 };
       renderCropBox();
     };
-    try { img.src = c.toDataURL("image/png"); } catch (e) {}
+    var out; try { out = c.toDataURL("image/jpeg", 0.9); } catch (e) { out = null; }
+    c.width = c.height = 0;                               // JPEG, not PNG: far lighter to encode and hold
+    if (out) img.src = out;
   }
 
   /* ---------- export / import ---------- */
@@ -1596,8 +1605,14 @@
   $("photoBtn").addEventListener("click", function () { $("photoInput").click(); });
   $("photoInput").addEventListener("change", function (ev) {
     var f = ev.target.files && ev.target.files[0]; if (!f) return;
-    openCropper(f);
     ev.target.value = "";
+    $("photoStatus").textContent = "Processing photo…";
+    decodeScaled(f, 1400).then(function (src) {
+      $("photoStatus").textContent = "";
+      openCropper(src);
+    }).catch(function () {
+      $("photoStatus").textContent = "Could not read that image. Try a smaller one.";
+    });
   });
   $("photoRemove").addEventListener("click", function () { setPendingPhoto(null); });
   initCropEvents();
