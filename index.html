@@ -181,22 +181,17 @@
   .icon-sm.del:active { color: var(--bad); border-color: var(--bad); }
 
   /* ---------- compact / expand mode ---------- */
-  .toolbar .row > .compact-toggle { flex: none; width: 46px; padding: 11px 0; }
+  .toolbar .row > .compact-toggle { flex: none; width: 54px; padding: 11px 0; margin-left: 2px; }
   .compact-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
   .note-dot { display: none; align-items: center; gap: 5px; color: var(--muted); font-size: 11.5px; font-style: italic; }
   .note-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .7; flex: none; }
   .cards.compact { gap: 8px; }
   .cards.compact .card-body { padding: 9px 12px 9px 18px; }
   .cards.compact .pen { margin-bottom: 5px; }
-  .cards.compact .card:not(.expanded) .combo { flex-direction: row; flex-wrap: nowrap; gap: 10px; font-size: 12.5px; overflow: hidden; }
-  .cards.compact .card:not(.expanded) .combo .cicon { width: 15px; height: 16px; }
-  .cards.compact .card:not(.expanded) .ci { flex: 1 1 0; min-width: 0; }
-  .cards.compact .card:not(.expanded) .ci .civ { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cards.compact .card:not(.expanded) .note-dot { flex: none; }
   .cards.compact .card { cursor: pointer; }
   .cards.compact .card:not(.expanded) .comment { display: none; }
   .cards.compact .card:not(.expanded) .card-thumb { display: none; }
-  .cards.compact .card:not(.expanded) .note-dot { display: inline-flex; }
+  .cards.compact .card:not(.expanded) .note-dot { display: inline-flex; position: absolute; right: 12px; bottom: 8px; }
   .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
   .q1 { background: #f2d9d3; color: #8f3f2e; }
   .q2 { background: #f6e6cf; color: #8a5a1e; }
@@ -443,13 +438,12 @@
       <line x1="12" y1="11" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
     </symbol>
     <symbol id="i-collapse" viewBox="0 0 24 24">
-      <line x1="5" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <line x1="5" y1="17" x2="19" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M7 5 L12 10 L17 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 19 L12 14 L17 19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
     <symbol id="i-expand" viewBox="0 0 24 24">
-      <path d="M8 9 L12 5 L16 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M8 15 L12 19 L16 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 10 L12 5 L17 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 14 L12 19 L17 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
   </defs>
 </svg>
@@ -482,9 +476,9 @@
     <div class="toolbar">
       <input type="search" id="search" placeholder="Search pen, nib, ink, paper, notes…" />
       <div class="row">
-        <button class="tool-btn compact-toggle" id="compactBtn" type="button" title="Compact view" aria-pressed="false"><svg class="tbi"><use href="#i-collapse"/></svg></button>
         <button class="tool-btn" id="sortBtn" type="button"><svg class="tbi"><use href="#i-sort"/></svg> Sort</button>
         <button class="tool-btn" id="filterBtn" type="button"><svg class="tbi"><use href="#i-filter"/></svg> Filter <span class="fdot" id="filterDot" hidden></span></button>
+        <button class="tool-btn compact-toggle" id="compactBtn" type="button" title="Compact view" aria-pressed="false"><svg class="tbi"><use href="#i-expand"/></svg></button>
       </div>
     </div>
     <select id="sortBy" hidden aria-label="Sort">
@@ -1158,8 +1152,7 @@
     var btn = $("compactBtn");
     btn.classList.toggle("active", compact);
     btn.setAttribute("aria-pressed", compact ? "true" : "false");
-    btn.title = compact ? "Expand cards" : "Compact view";
-    btn.querySelector("use").setAttribute("href", compact ? "#i-expand" : "#i-collapse");
+    btn.title = compact ? "Expand cards" : "Compact cards";
     $("logList").classList.toggle("compact", compact);
   }
 
