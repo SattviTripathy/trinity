@@ -166,7 +166,7 @@
   .card::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 1.5px; background: var(--margin-red); opacity: .5; z-index: 1; }
   .exp-band { flex: none; width: 34px; display: flex; align-items: center; justify-content: center; }
   .exp-band span { writing-mode: vertical-rl; text-orientation: mixed; font-weight: 700; font-size: 12px; letter-spacing: .6px; white-space: nowrap; }
-  .card .pen { font-weight: 700; font-size: 16px; line-height: 1.3; display: flex; align-items: flex-start; gap: 7px; padding-right: 58px; margin-bottom: 7px; }
+  .card .pen { font-weight: 700; font-size: 16px; line-height: 1.3; display: flex; align-items: flex-start; gap: 7px; padding-right: 46px; margin-bottom: 7px; }
   .card .pen .nibmark { width: 12px; height: 15px; color: var(--accent); flex: none; opacity: .8; margin-top: 3px; }
   .card .pen .pen-name { flex: 1; min-width: 0; }
   .card .pen .nib-abbr { font-weight: 400; font-style: italic; color: var(--muted); font-size: 0.82em; white-space: nowrap; }
@@ -179,6 +179,24 @@
   .icon-sm .mini { width: 15px; height: 15px; }
   .icon-sm.edit:active { color: var(--accent); border-color: var(--accent); }
   .icon-sm.del:active { color: var(--bad); border-color: var(--bad); }
+
+  /* ---------- compact / expand mode ---------- */
+  .toolbar .row > .compact-toggle { flex: none; width: 46px; padding: 11px 0; }
+  .compact-toggle.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+  .note-dot { display: none; align-items: center; gap: 5px; color: var(--muted); font-size: 11.5px; font-style: italic; }
+  .note-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: .7; flex: none; }
+  .cards.compact { gap: 8px; }
+  .cards.compact .card-body { padding: 9px 12px 9px 18px; }
+  .cards.compact .pen { margin-bottom: 5px; }
+  .cards.compact .card:not(.expanded) .combo { flex-direction: row; flex-wrap: nowrap; gap: 10px; font-size: 12.5px; overflow: hidden; }
+  .cards.compact .card:not(.expanded) .combo .cicon { width: 15px; height: 16px; }
+  .cards.compact .card:not(.expanded) .ci { flex: 1 1 0; min-width: 0; }
+  .cards.compact .card:not(.expanded) .ci .civ { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cards.compact .card:not(.expanded) .note-dot { flex: none; }
+  .cards.compact .card { cursor: pointer; }
+  .cards.compact .card:not(.expanded) .comment { display: none; }
+  .cards.compact .card:not(.expanded) .card-thumb { display: none; }
+  .cards.compact .card:not(.expanded) .note-dot { display: inline-flex; }
   .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
   .q1 { background: #f2d9d3; color: #8f3f2e; }
   .q2 { background: #f6e6cf; color: #8a5a1e; }
@@ -424,6 +442,15 @@
       <path d="M3 7 V17 L12 21 L21 17 V7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
       <line x1="12" y1="11" x2="12" y2="21" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
     </symbol>
+    <symbol id="i-collapse" viewBox="0 0 24 24">
+      <line x1="5" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="5" y1="17" x2="19" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24">
+      <path d="M8 9 L12 5 L16 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8 15 L12 19 L16 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -455,6 +482,7 @@
     <div class="toolbar">
       <input type="search" id="search" placeholder="Search pen, nib, ink, paper, notes…" />
       <div class="row">
+        <button class="tool-btn compact-toggle" id="compactBtn" type="button" title="Compact view" aria-pressed="false"><svg class="tbi"><use href="#i-collapse"/></svg></button>
         <button class="tool-btn" id="sortBtn" type="button"><svg class="tbi"><use href="#i-sort"/></svg> Sort</button>
         <button class="tool-btn" id="filterBtn" type="button"><svg class="tbi"><use href="#i-filter"/></svg> Filter <span class="fdot" id="filterDot" hidden></span></button>
       </div>
@@ -890,6 +918,9 @@
   var editingId = null;    // id of the log entry being edited, or null for a new one
   var invCat = "pen";      // current add-sheet category
   var invEditingId = null; // id of inventory item being edited, or null
+  var COMPACT_KEY = "trinity.compact";
+  var compact = (function () { try { var v = localStorage.getItem(COMPACT_KEY); return v === null ? true : v === "1"; } catch (e) { return true; } })(); // compact log cards on (default: on)
+  var expandedCards = new Set(); // ids of cards tapped open while in compact mode
   var currentViewName = "log";
 
   var $ = function (id) { return document.getElementById(id); };
@@ -1091,10 +1122,12 @@
 
     $("logList").innerHTML = rows.map(function (e) {
       var qn = Number(e.experience) || 3;
-      var abbr = e.nib ? ' <span class="nib-abbr" title="' + esc(e.nib) + '">(' + esc(abbrevNib(e.nib)) + ')</span>' : '';
+      var abbr = e.nib ? '&nbsp;<span class="nib-abbr" title="' + esc(e.nib) + '">(' + esc(abbrevNib(e.nib)) + ')</span>' : '';
       var thumb = e.photo ? '<div class="card-thumb"><img data-photo-id="' + e.id + '" data-photo="' + e.id + '" alt="Writing sample" loading="lazy"/></div>' : '';
       var comment = e.comments ? '<div class="comment">' + esc(e.comments) + '</div>' : '';
-      return '<div class="card">' +
+      var noteDot = e.comments ? '<span class="note-dot" title="Has notes">note</span>' : '';
+      var isExp = expandedCards.has(e.id);
+      return '<div class="card' + (isExp ? ' expanded' : '') + '" data-id="' + e.id + '">' +
         '<div class="card-body">' +
           '<div class="card-actions">' +
           '<button class="icon-sm edit" data-edit="' + e.id + '" title="Edit" aria-label="Edit entry"><svg class="mini"><use href="#i-edit"/></svg></button>' +
@@ -1103,20 +1136,31 @@
           thumb +
           '<div class="pen"><svg class="nibmark"><use href="#i-nib"/></svg><span class="pen-name">' + esc(e.pen) + abbr + '</span></div>' +
           '<div class="combo">' +
-            '<span class="ci"><svg class="cicon"><use href="#i-inkbottle"/></svg>' + esc(e.ink) + '</span>' +
-            '<span class="ci"><svg class="cicon"><use href="#i-paper"/></svg>' + esc(e.paper) + '</span>' +
+            '<span class="ci" title="' + esc(e.ink) + '"><svg class="cicon"><use href="#i-inkbottle"/></svg><span class="civ">' + esc(e.ink) + '</span></span>' +
+            '<span class="ci" title="' + esc(e.paper) + '"><svg class="cicon"><use href="#i-paper"/></svg><span class="civ">' + esc(e.paper) + '</span></span>' +
+            noteDot +
           '</div>' +
           comment +
         '</div>' +
         '<div class="exp-band q' + qn + '" title="Experience: ' + EXP_WORDS[qn] + '"><span>' + EXP_WORDS[qn] + '</span></div>' +
         '</div>';
     }).join("");
+    $("logList").classList.toggle("compact", compact);
     loadCardPhotos();
 
     $("emptyState").hidden = entries.length !== 0;
     $("logList").hidden = entries.length === 0;
     $("logCount").textContent = entries.length ? (rows.length === entries.length ? "· " + entries.length : "· " + rows.length + " of " + entries.length) : "";
     updateFilterDot();
+  }
+
+  function updateCompactUI() {
+    var btn = $("compactBtn");
+    btn.classList.toggle("active", compact);
+    btn.setAttribute("aria-pressed", compact ? "true" : "false");
+    btn.title = compact ? "Expand cards" : "Compact view";
+    btn.querySelector("use").setAttribute("href", compact ? "#i-expand" : "#i-collapse");
+    $("logList").classList.toggle("compact", compact);
   }
 
   /* ---------- recommender (user picks what to find) ---------- */
@@ -1591,9 +1635,22 @@
       return;
     }
     var ph = ev.target.closest("[data-photo]");
-    if (ph) { $("lightboxImg").src = ph.getAttribute("src"); $("lightbox").hidden = false; }
+    if (ph) { $("lightboxImg").src = ph.getAttribute("src"); $("lightbox").hidden = false; return; }
+    if (compact) { // tap a compact card to reveal its notes + photo
+      var card = ev.target.closest(".card"); if (!card) return;
+      var id = card.getAttribute("data-id");
+      if (expandedCards.has(id)) { expandedCards.delete(id); card.classList.remove("expanded"); }
+      else { expandedCards.add(id); card.classList.add("expanded"); }
+    }
   });
   $("lightbox").addEventListener("click", function () { $("lightbox").hidden = true; });
+  $("compactBtn").addEventListener("click", function () {
+    compact = !compact;
+    if (!compact) expandedCards.clear();
+    try { localStorage.setItem(COMPACT_KEY, compact ? "1" : "0"); } catch (e) {}
+    updateCompactUI();
+    render();
+  });
 
   ["search", "filterExperience", "filterPen", "filterInk", "filterPaper", "filterNib", "sortBy"].forEach(function (id) { $(id).addEventListener(id === "search" ? "input" : "change", render); });
 
@@ -1682,7 +1739,7 @@
   $("clearAll").addEventListener("click", function (ev) { ev.preventDefault(); $("mClear").click(); });
 
   /* ---------- boot ---------- */
-  initTheme(); initProfile(); initNav(); initNibSelect(); initRec(); initInv(); refreshDatalists(); refreshFilterOptions(); render(); renderInv();
+  initTheme(); initProfile(); initNav(); initNibSelect(); initRec(); initInv(); updateCompactUI(); refreshDatalists(); refreshFilterOptions(); render(); renderInv();
   idbOpen().then(migratePhotos).catch(function () {}).then(function () { render(); });
   if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); }); }
 })();
