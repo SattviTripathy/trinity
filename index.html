@@ -12,6 +12,10 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 52'%3E%3Cpath d='M20 1 C11 5 6 15 8 30 L20 51 L32 30 C34 15 29 5 20 1 Z' fill='%230f7d86'/%3E%3Cline x1='20' y1='24' x2='20' y2='49' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='23' r='3.4' fill='white'/%3E%3C/svg%3E" />
 <link rel="apple-touch-icon" href="icon-192.png" />
+<script>
+  /* Apply the theme before first paint: light is the default, a saved choice wins. */
+  (function () { try { var t = localStorage.getItem("trinity.theme"); document.documentElement.setAttribute("data-theme", t || "light"); } catch (e) { document.documentElement.setAttribute("data-theme", "light"); } })();
+</script>
 <style>
   :root {
     --bg: #f4f1ea;
@@ -961,11 +965,10 @@
   /* ---------- theme ---------- */
   function initTheme() {
     var saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
-    if (saved) document.documentElement.setAttribute("data-theme", saved);
+    document.documentElement.setAttribute("data-theme", saved || "light"); // light is the default
     $("themeBtn").addEventListener("click", function () {
-      var cur = document.documentElement.getAttribute("data-theme");
-      var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      var next = !cur ? (prefersDark ? "light" : "dark") : (cur === "dark" ? "light" : "dark");
+      var cur = document.documentElement.getAttribute("data-theme") || "light";
+      var next = cur === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
       try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
     });
